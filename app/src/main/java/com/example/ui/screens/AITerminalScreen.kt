@@ -19,17 +19,43 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.GlassCard
 import com.example.ui.theme.*
 
-data class TerminalMessage(val text: String, val isUser: Boolean)
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+data class TerminalMessage(val text: String, val isUser: Boolean, val isTyping: Boolean = false)
 
 @Composable
 fun AITerminalScreen() {
     var input by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<TerminalMessage>(
         TerminalMessage("Conectado a CodeLlama (Local Node)...", false),
-        TerminalMessage("Esperando instrucciones de pentest.", false)
+        TerminalMessage("Esperando instrucciones.", false)
     ) }
 
+    var isAiTyping by remember { mutableStateOf(false) }
+
+    suspend fun simulateAiResponse(command: String) {
+        isAiTyping = true
+        val tempMsg = TerminalMessage("...", false, isTyping = true)
+        messages.add(tempMsg)
+        
+        delay(1000)
+        
+        val response = when (command.uppercase()) {
+            "CHECK_NODE" -> "Estado: NODE_ALPHA Activo. Hashrate: 3200 H/s. Latencia: 42ms."
+            "PING_POOL" -> "Pool: pool.hashvault.pro:80. Respuesta: OK. Latencia: 18ms."
+            "OPTIMIZE_CPU" -> "Optimizando... Ajustando afinidad de hilos. Eficiencia +4%."
+            "SHOW_LOGS" -> "Último evento: Accepted share (diff 120002) - OK."
+            else -> "Comando '$command' no reconocido. Intente: CHECK_NODE, PING_POOL."
+        }
+        
+        messages.remove(tempMsg)
+        messages.add(TerminalMessage(response, false))
+        isAiTyping = false
+    }
+
     val quickCommands = listOf("CHECK_NODE", "PING_POOL", "OPTIMIZE_CPU", "SHOW_LOGS")
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -90,7 +116,9 @@ fun AITerminalScreen() {
                 AssistChip(
                     onClick = {
                         messages.add(TerminalMessage(cmd, true))
-                        messages.add(TerminalMessage("Ejecutando: $cmd... [SIMULACIÓN]", false))
+                        coroutineScope.launch {
+                            simulateAiResponse(cmd)
+                        }
                     },
                     label = { Text(cmd, color = TechCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace) },
                     colors = AssistChipDefaults.assistChipColors(containerColor = GlassPanel),
@@ -123,11 +151,13 @@ fun AITerminalScreen() {
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(
                 onClick = {
-                    if (input.isNotBlank()) {
+                    if (input.isNotBlank() && !isAiTyping) {
                         messages.add(TerminalMessage(input, true))
                         val cmd = input
                         input = ""
-                        messages.add(TerminalMessage("Ejecutando: $cmd... [SIMULACIÓN]", false))
+                        coroutineScope.launch {
+                            simulateAiResponse(cmd)
+                        }
                     }
                 },
                 modifier = Modifier
