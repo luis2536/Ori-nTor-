@@ -81,7 +81,10 @@ fun TermsScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { navController.navigate("dashboard") { popUpTo("login") { inclusive = true } } },
+            onClick = {
+                val route = if (com.example.model.Session.isAdmin) "admin" else "dashboard"
+                navController.navigate(route) { popUpTo("login") { inclusive = true } }
+            },
             enabled = accepted,
             modifier = Modifier
                 .fillMaxWidth()

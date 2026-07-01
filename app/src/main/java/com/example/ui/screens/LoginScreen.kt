@@ -105,6 +105,8 @@ fun LoginScreen(navController: NavController) {
                 Button(
                     onClick = {
                         isAuthenticating = true
+                        com.example.model.Session.isAdmin = accessKey == "admin"
+                        com.example.model.Session.currentKey = accessKey
                         navController.navigate("terms")
                     },
                     modifier = Modifier

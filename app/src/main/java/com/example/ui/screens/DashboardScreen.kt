@@ -34,7 +34,11 @@ fun DashboardScreen() {
     var currentHashrate by remember { mutableStateOf(0) }
     var cpuTemp by remember { mutableStateOf(45) }
     var ramUsage by remember { mutableStateOf(2.1f) }
+    var balance by remember { mutableStateOf(0.00421) }
     val hashrateHistory = remember { mutableStateListOf<Int>() }
+    
+    var showPaymentDialog by remember { mutableStateOf(false) }
+    var btcAddress by remember { mutableStateOf("") }
 
     // Simulation loop
     LaunchedEffect(isMining) {
@@ -46,7 +50,6 @@ fun DashboardScreen() {
             return@LaunchedEffect
         }
         
-        // Initial setup for graph
         for (i in 0..20) hashrateHistory.add(0)
 
         while (isMining) {
@@ -54,12 +57,54 @@ fun DashboardScreen() {
             currentHashrate = Random.nextInt(1200, 3500)
             cpuTemp = Random.nextInt(65, 85)
             ramUsage = 3.5f + Random.nextFloat() * 1.5f
+            balance += 0.0000001
             
             hashrateHistory.add(currentHashrate)
             if (hashrateHistory.size > 20) {
                 hashrateHistory.removeAt(0)
             }
         }
+    }
+
+    if (showPaymentDialog) {
+        AlertDialog(
+            onDismissRequest = { showPaymentDialog = false },
+            containerColor = DarkBackground,
+            titleContentColor = TechCyan,
+            textContentColor = TextPrimary,
+            title = { Text("Solicitar Retiro (BTC)") },
+            text = {
+                Column {
+                    Text("Ingresa tu dirección de billetera Bitcoin. El monto mínimo es 0.001 BTC.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = btcAddress,
+                        onValueChange = { btcAddress = it },
+                        label = { Text("Billetera BTC", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonGreen,
+                            unfocusedBorderColor = GlassBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showPaymentDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                ) {
+                    Text("ENVIAR", color = DarkBackground)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPaymentDialog = false }) {
+                    Text("CANCELAR", color = RedAlert)
+                }
+            }
+        )
     }
 
     Column(
@@ -69,7 +114,7 @@ fun DashboardScreen() {
             .padding(16.dp)
     ) {
         Text(
-            text = "NODO LOCAL",
+            text = "PANEL DE NODO",
             color = TechCyan,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
@@ -98,7 +143,6 @@ fun DashboardScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Hashrate Chart
         GlassCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,10 +164,9 @@ fun DashboardScreen() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Master Switch
         val glowAlpha by animateFloatAsState(
             targetValue = if (isMining) 1f else 0f,
-            animationSpec = tween(1000)
+            animationSpec = tween(1000), label = ""
         )
 
         Button(
@@ -143,7 +186,7 @@ fun DashboardScreen() {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = if (isMining) "DETENER SOC" else "INICIAR SOC DE MINERÍA",
+                text = if (isMining) "DETENER NODO DE MINERÍA" else "INICIAR NODO DE MINERÍA",
                 color = if (isMining) RedAlert else DarkBackground,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
@@ -152,7 +195,6 @@ fun DashboardScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Withdrawal Request
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -161,17 +203,17 @@ fun DashboardScreen() {
                     Text("SALDO ACUMULADO", color = TechCyan, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("0.00421 BTC", color = TextPrimary, fontSize = 24.sp)
-                Text("~ $284.50 USD", color = TextSecondary, fontSize = 12.sp)
+                Text(String.format("%.7f BTC", balance), color = TextPrimary, fontSize = 24.sp)
+                Text("~ $${String.format("%.2f", balance * 65000)} USD", color = TextSecondary, fontSize = 12.sp)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { /* Simulate withdrawal */ },
+                    onClick = { showPaymentDialog = true },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = GlassPanel),
                     border = androidx.compose.foundation.BorderStroke(1.dp, TechCyan)
                 ) {
-                    Text("SOLICITAR COBRO", color = TechCyan)
+                    Text("SOLICITAR PAGO A BILLETERA", color = TechCyan)
                 }
             }
         }
@@ -197,7 +239,7 @@ fun StatusCard(modifier: Modifier = Modifier, title: String, value: String, icon
 fun HashrateChart(data: List<Int>, modifier: Modifier = Modifier) {
     if (data.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            Text("NO DATA", color = TextSecondary)
+            Text("ESPERANDO CONEXIÓN...", color = TextSecondary)
         }
         return
     }
