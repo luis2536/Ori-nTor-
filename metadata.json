@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Orion Thor",
+  "description": "ORION THOR: SoC de Minería",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
