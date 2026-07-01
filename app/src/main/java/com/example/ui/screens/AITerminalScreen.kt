@@ -2,9 +2,11 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
@@ -27,6 +29,8 @@ fun AITerminalScreen() {
         TerminalMessage("Esperando instrucciones de pentest.", false)
     ) }
 
+    val quickCommands = listOf("CHECK_NODE", "PING_POOL", "OPTIMIZE_CPU", "SHOW_LOGS")
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,6 +41,11 @@ fun AITerminalScreen() {
             color = TechCyan,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+        )
+        Text(
+            text = "AGENT: CodeLlama 7B",
+            color = TextSecondary,
+            fontSize = 12.sp
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -61,7 +70,7 @@ fun AITerminalScreen() {
                             text = if (msg.isUser) "> ${msg.text}" else msg.text,
                             color = if (msg.isUser) NeonGreen else TextPrimary,
                             fontFamily = FontFamily.Monospace,
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
                             modifier = Modifier.fillMaxWidth(0.85f)
                         )
                     }
@@ -70,6 +79,27 @@ fun AITerminalScreen() {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            quickCommands.forEach { cmd ->
+                AssistChip(
+                    onClick = {
+                        messages.add(TerminalMessage(cmd, true))
+                        messages.add(TerminalMessage("Ejecutando: $cmd... [SIMULACIÓN]", false))
+                    },
+                    label = { Text(cmd, color = TechCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace) },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = GlassPanel),
+                    border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = GlassBorder)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -79,7 +109,7 @@ fun AITerminalScreen() {
                 value = input,
                 onValueChange = { input = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Comando...", color = TextSecondary, fontFamily = FontFamily.Monospace) },
+                placeholder = { Text("Comando...", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 12.sp) },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = NeonGreen,
                     unfocusedBorderColor = GlassBorder,
@@ -88,7 +118,7 @@ fun AITerminalScreen() {
                     cursorColor = NeonGreen
                 ),
                 singleLine = true,
-                textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace)
+                textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(
@@ -97,7 +127,6 @@ fun AITerminalScreen() {
                         messages.add(TerminalMessage(input, true))
                         val cmd = input
                         input = ""
-                        // Mock AI Response
                         messages.add(TerminalMessage("Ejecutando: $cmd... [SIMULACIÓN]", false))
                     }
                 },
@@ -108,5 +137,6 @@ fun AITerminalScreen() {
                 Icon(Icons.Default.Send, contentDescription = "Send", tint = TechCyan)
             }
         }
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.GlassBorder
 import com.example.ui.theme.GlassPanel
@@ -20,8 +21,24 @@ fun GlassCard(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(GlassPanel)
-            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp)),
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        GlassPanel.copy(alpha = 0.8f),
+                        GlassPanel.copy(alpha = 0.4f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        GlassBorder.copy(alpha = 0.6f),
+                        GlassBorder.copy(alpha = 0.1f)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ),
         content = content
     )
 }

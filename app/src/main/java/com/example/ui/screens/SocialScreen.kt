@@ -110,5 +110,6 @@ fun SocialScreen() {
                 Icon(Icons.Default.Send, contentDescription = "Send", tint = TechCyan)
             }
         }
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }

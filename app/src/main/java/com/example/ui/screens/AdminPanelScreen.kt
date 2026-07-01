@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,19 +9,24 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.GlassCard
 import com.example.ui.theme.*
+import kotlin.random.Random
 
-data class NodeInfo(val id: String, val ip: String, val status: String, val hashRate: Int)
+data class NodeInfo(val id: String, val ip: String, val status: String, val hashRate: Int, val region: String)
 data class PaymentRequest(val id: String, val userId: String, val amountBTC: String, val address: String, var approved: Boolean)
 
 @Composable
@@ -28,10 +34,10 @@ fun AdminPanelScreen() {
     var selectedTab by remember { mutableStateOf(0) }
     
     val nodes = remember { mutableStateListOf(
-        NodeInfo("NODE_ALPHA", "192.168.1.10", "ACTIVE", 3200),
-        NodeInfo("NODE_BETA", "192.168.1.15", "ACTIVE", 2850),
-        NodeInfo("NODE_GAMMA", "192.168.1.22", "OFFLINE", 0),
-        NodeInfo("NODE_DELTA", "192.168.1.105", "ACTIVE", 4100)
+        NodeInfo("NODE_ALPHA", "192.168.1.10", "ACTIVE", 3200, "US-EAST"),
+        NodeInfo("NODE_BETA", "192.168.1.15", "ACTIVE", 2850, "EU-WEST"),
+        NodeInfo("NODE_GAMMA", "192.168.1.22", "OFFLINE", 0, "SA-EAST"),
+        NodeInfo("NODE_DELTA", "192.168.1.105", "ACTIVE", 4100, "AP-NORTHEAST")
     ) }
 
     val payments = remember { mutableStateListOf(
@@ -123,6 +129,50 @@ fun NodesAdminView(nodes: List<NodeInfo>) {
         }
         
         Spacer(modifier = Modifier.height(16.dp))
+        
+        // Regional Map Mock
+        GlassCard(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                // Background map lines mock
+                Canvas(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    val w = size.width
+                    val h = size.height
+                    for (i in 0..5) {
+                        drawLine(
+                            color = TechCyan.copy(alpha = 0.1f),
+                            start = Offset(0f, h * Random.nextFloat()),
+                            end = Offset(w, h * Random.nextFloat()),
+                            strokeWidth = 2f,
+                            cap = StrokeCap.Round
+                        )
+                    }
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Public, contentDescription = null, tint = TechCyan)
+                        Text("US-EAST", color = TextSecondary, fontSize = 10.sp)
+                        Text("32%", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Public, contentDescription = null, tint = TechCyan)
+                        Text("EU-WEST", color = TextSecondary, fontSize = 10.sp)
+                        Text("45%", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Public, contentDescription = null, tint = TechCyan)
+                        Text("AP-NORTH", color = TextSecondary, fontSize = 10.sp)
+                        Text("23%", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = { /* Simulate Kill Switch */ },
@@ -153,7 +203,7 @@ fun NodesAdminView(nodes: List<NodeInfo>) {
                     ) {
                         Column {
                             Text(node.id, color = TextPrimary, fontWeight = FontWeight.Bold)
-                            Text("IP: ${node.ip}", color = TextSecondary, fontSize = 12.sp)
+                            Text("${node.ip} • ${node.region}", color = TextSecondary, fontSize = 12.sp)
                             Text("Estado: ${node.status} | ${node.hashRate} H/s", color = if (node.status == "ACTIVE") NeonGreen else RedAlert, fontSize = 12.sp)
                         }
                         
