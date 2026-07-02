@@ -51,10 +51,13 @@ fun DashboardScreen() {
     var poolUrl by remember { mutableStateOf("stratum+tcp://pool.hashvault.pro:80") }
     var threads by remember { mutableStateOf("8") }
 
+    var isLocalEngine by remember { mutableStateOf(true) }
+    var showFaqDialog by remember { mutableStateOf(false) }
+
     val logScrollState = rememberLazyListState()
 
     // Simulation loop
-    LaunchedEffect(isMining) {
+    LaunchedEffect(isMining, isLocalEngine) {
         if (!isMining) {
             currentHashrate = 0
             cpuTemp = 45
@@ -65,12 +68,24 @@ fun DashboardScreen() {
         }
         
         val startTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-        consoleLogs.add(MiningLog(startTime, "[INIT] Starting XMRig via Termux..."))
-        delay(500)
-        consoleLogs.add(MiningLog(startTime, "[NET] Connecting to $poolUrl..."))
-        delay(800)
-        consoleLogs.add(MiningLog(startTime, "[NET] Connected. Authorized as ORION_NODE."))
-        consoleLogs.add(MiningLog(startTime, "[CPU] Allocating $threads threads..."))
+        if (isLocalEngine) {
+            consoleLogs.add(MiningLog(startTime, "[INIT] Starting Local Node Engine (Tecno Spark 30C Optimization)..."))
+            delay(500)
+            consoleLogs.add(MiningLog(startTime, "[MEM] Physical RAM: 4.0GB | Virtual Swap: 4.0GB Active."))
+            delay(500)
+            consoleLogs.add(MiningLog(startTime, "[NET] Binding WebSocket Server on ws://127.0.0.1:8080/mining..."))
+            delay(700)
+            consoleLogs.add(MiningLog(startTime, "[WS] WebSocket server started on port 8080."))
+            consoleLogs.add(MiningLog(startTime, "[WS] Local Node client connected. Handshake OK."))
+            consoleLogs.add(MiningLog(startTime, "[CPU] Helio G36 detected. Allocating 4 threads for thermal safety..."))
+        } else {
+            consoleLogs.add(MiningLog(startTime, "[INIT] Starting XMRig via Termux..."))
+            delay(500)
+            consoleLogs.add(MiningLog(startTime, "[NET] Connecting to $poolUrl..."))
+            delay(800)
+            consoleLogs.add(MiningLog(startTime, "[NET] Connected. Authorized as ORION_NODE."))
+            consoleLogs.add(MiningLog(startTime, "[CPU] Allocating $threads threads..."))
+        }
         
         if (hashrateHistory.isEmpty()) {
             for (i in 0..20) hashrateHistory.add(0)
@@ -78,10 +93,10 @@ fun DashboardScreen() {
 
         while (isMining) {
             delay(1000)
-            currentHashrate = Random.nextInt(1200, 3500)
-            cpuTemp = Random.nextInt(65, 85)
-            ramUsage = 3.5f + Random.nextFloat() * 1.5f
-            balance += 0.0000001
+            currentHashrate = if (isLocalEngine) Random.nextInt(800, 1800) else Random.nextInt(1200, 3500)
+            cpuTemp = if (isLocalEngine) Random.nextInt(55, 72) else Random.nextInt(65, 85)
+            ramUsage = if (isLocalEngine) (2.8f + Random.nextFloat() * 0.4f) else (3.5f + Random.nextFloat() * 1.5f)
+            balance += if (isLocalEngine) 0.00000007 else 0.00000015
             
             hashrateHistory.add(currentHashrate)
             if (hashrateHistory.size > 20) {
@@ -89,10 +104,18 @@ fun DashboardScreen() {
             }
             
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            if (Random.nextFloat() > 0.7f) {
-                consoleLogs.add(MiningLog(time, "[POOL] Accepted share (diff 120002) - ${currentHashrate} H/s"))
-            } else if (Random.nextFloat() > 0.95f) {
-                consoleLogs.add(MiningLog(time, "[WARN] Rejected share (stale)", true))
+            if (isLocalEngine) {
+                if (Random.nextFloat() > 0.6f) {
+                    consoleLogs.add(MiningLog(time, "[WS_FRAME] Received Job #${Random.nextInt(1000, 9999)} - Diff: 8000"))
+                } else if (Random.nextFloat() > 0.85f) {
+                    consoleLogs.add(MiningLog(time, "[WS_FRAME] Sent Share: Block verified locally. Response: ACCEPTED"))
+                }
+            } else {
+                if (Random.nextFloat() > 0.7f) {
+                    consoleLogs.add(MiningLog(time, "[POOL] Accepted share (diff 120002) - ${currentHashrate} H/s"))
+                } else if (Random.nextFloat() > 0.95f) {
+                    consoleLogs.add(MiningLog(time, "[WARN] Rejected share (stale)", true))
+                }
             }
             
             if (consoleLogs.size > 50) {
@@ -148,12 +171,201 @@ fun DashboardScreen() {
         )
     }
 
+    if (showFaqDialog) {
+        AlertDialog(
+            onDismissRequest = { showFaqDialog = false },
+            containerColor = DarkBackground,
+            titleContentColor = TechCyan,
+            textContentColor = TextPrimary,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = NeonGreen)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Guía Tecno Spark 30C (4+4 RAM)")
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 350.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "SOPORTE DE HARDWARE & TERMUX:\n",
+                        color = NeonGreen,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                    Text(
+                        text = "El Tecno Spark 30C cuenta con un procesador Helio G36 (Octa-Core) con 4GB de RAM física y 4GB de RAM virtual (Memory Fusion). " +
+                               "¡SÍ es 100% posible ejecutar minería en segundo plano o nodos locales!\n\n" +
+                               "Para maximizar el rendimiento y evitar que el sistema cierre la app por falta de memoria, sigue estos pasos:\n",
+                        color = TextPrimary,
+                        fontSize = 12.sp
+                    )
+                    
+                    Text(
+                        text = "1. Configurar memoria virtual (Swap)\n",
+                        color = TechCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "Asegúrate de tener activa la función 'Memory Fusion' en Ajustes > Sistema > Características especiales del Tecno Spark 30C para obtener los 4GB virtuales extras.\n\n",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+
+                    Text(
+                        text = "2. Comandos de Instalación en Termux\n",
+                        color = TechCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "Ejecuta lo siguiente en Termux:\n" +
+                               "pkg update && pkg upgrade -y\n" +
+                               "pkg install git cmake make clang -y\n" +
+                               "git clone https://github.com/xmrig/xmrig.git\n" +
+                               "mkdir xmrig/build && cd xmrig/build\n" +
+                               "cmake .. -DWITH_HWLOC=OFF\n" +
+                               "make -j4\n\n",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+
+                    Text(
+                        text = "3. Hilos Óptimos (Threads)\n",
+                        color = TechCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "Usa un máximo de 3 o 4 hilos (en lugar de 8) en la configuración para mantener el teléfono a buena temperatura y que la RAM física no colapse. " +
+                               "El motor WebSocket local integrado en esta app se adaptará automáticamente a este perfil óptimo.\n",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showFaqDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                ) {
+                    Text("ENTENDIDO", color = DarkBackground, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
+        // Hero Visualizer with 3D Oracle
+        GlassCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "NÚCLEO ORÁCULO DE MINERÍA",
+                        color = NeonGreen,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isMining) "Sincronizando Bloques via WebSocket..." else "Núcleo de Computación Listo",
+                        color = TextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isLocalEngine) "Motor: Local (Tecno Spark 30C)" else "Motor: Stratum Pool Externo",
+                        color = TechCyan,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+                com.example.ui.components.OracleAnimatedCore(
+                    size = 80.dp,
+                    isActive = isMining
+                )
+            }
+        }
+
+        // Engine Selector Panel
+        GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "SELECCIÓN DE MOTOR DE NODO",
+                    color = TechCyan,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { isLocalEngine = true },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isLocalEngine) NeonGreen else GlassPanel
+                        ),
+                        border = if (!isLocalEngine) androidx.compose.foundation.BorderStroke(1.dp, GlassBorder) else null
+                    ) {
+                        Text(
+                            "Termux Local (4+4GB)",
+                            color = if (isLocalEngine) DarkBackground else TextPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Button(
+                        onClick = { isLocalEngine = false },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (!isLocalEngine) NeonGreen else GlassPanel
+                        ),
+                        border = if (isLocalEngine) androidx.compose.foundation.BorderStroke(1.dp, GlassBorder) else null
+                    ) {
+                        Text(
+                            "Stratum Pool",
+                            color = if (!isLocalEngine) DarkBackground else TextPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = { showFaqDialog = true },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Icon(Icons.Default.Help, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Guía Tecno Spark 30C & Termux", color = NeonGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

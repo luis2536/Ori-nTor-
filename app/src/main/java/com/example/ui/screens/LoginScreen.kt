@@ -63,13 +63,11 @@ fun LoginScreen(navController: NavController) {
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = "Security",
-                    tint = NeonGreen,
-                    modifier = Modifier.size(48.dp)
+                com.example.ui.components.OracleAnimatedCore(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    size = 120.dp,
+                    isActive = false
                 )
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "ORION THOR",
                     color = NeonGreen,

@@ -6,11 +6,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.GlassCard
@@ -38,7 +40,72 @@ fun SocialScreen() {
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // TikTok Community Trends Highlights Card
+        GlassCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.TrendingUp,
+                            contentDescription = "Trending",
+                            tint = NeonGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "TENDENCIAS VIRALES (TIKTOK)",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                    Text(
+                        text = "LIVE",
+                        color = RedAlert,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "El hashtag #OrionThorMining supera las 1.8M de vistas. Cientos de usuarios están sincronizando sus dispositivos Tecno Spark y Termux mediante nuestro WebSocket local.",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column {
+                        Text("VISTAS", color = TechCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("1.8M+", color = NeonGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column {
+                        Text("CONEXIONES", color = TechCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("12,420/s", color = NeonGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column {
+                        Text("TUTORIALES", color = TechCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("340 videos", color = NeonGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         GlassCard(
             modifier = Modifier
