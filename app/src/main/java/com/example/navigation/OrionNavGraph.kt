@@ -28,6 +28,7 @@ import com.example.ui.screens.AdminPanelScreen
 import com.example.ui.screens.AITerminalScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.LoginScreen
+import com.example.ui.screens.RoleSelectionScreen
 import com.example.ui.screens.SocialScreen
 import com.example.ui.screens.TermsScreen
 import com.example.ui.theme.DarkBackground
@@ -138,8 +139,9 @@ fun OrionNavGraph() {
         ) {
             NavHost(
                 navController = navController,
-                startDestination = "login"
+                startDestination = "role_selection"
             ) {
+                composable("role_selection") { RoleSelectionScreen(navController) }
                 composable("login") { LoginScreen(navController) }
                 composable("terms") { TermsScreen(navController) }
                 composable("dashboard") { DashboardScreen() }
