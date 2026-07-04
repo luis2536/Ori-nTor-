@@ -109,8 +109,8 @@ fun OracleAnimatedCore(
             // 1st 3D Angled Ring (Scaled on Y-axis to simulate 3D projection)
             withTransform({
                 translate(center.x, center.y)
+                scale(scaleX = 1f, scaleY = 0.3f) // Tilt effect for 3D (apply AFTER rotation to keep ellipse static)
                 rotate(rotationAngle)
-                scale(scaleX = 1f, scaleY = 0.3f) // Tilt effect for 3D
                 translate(-center.x, -center.y)
             }) {
                 drawCircle(
@@ -120,22 +120,19 @@ fun OracleAnimatedCore(
                     style = Stroke(width = 3.dp.toPx())
                 )
                 
-                // Outer orbital particle on the ring
-                val angleRad = Math.toRadians(rotationAngle.toDouble())
-                val orbitX = center.x + (baseRadius * 1.1f) * cos(angleRad).toFloat()
-                val orbitY = center.y + (baseRadius * 1.1f) * sin(angleRad).toFloat()
+                // Outer orbital particle on the ring (fixed geometry placement)
                 drawCircle(
                     color = if (isActive) RedAlert else NeonGreen,
-                    radius = 6.dp.toPx(),
-                    center = Offset(orbitX, orbitY)
+                    radius = 8.dp.toPx(),
+                    center = Offset(center.x + baseRadius * 1.1f, center.y)
                 )
             }
 
             // 2nd 3D Angled Ring (Inverted tilt and reverse rotation)
             withTransform({
                 translate(center.x, center.y)
-                rotate(innerRotationAngle)
                 scale(scaleX = 0.3f, scaleY = 1.0f) // Vertical tilt effect
+                rotate(innerRotationAngle)
                 translate(-center.x, -center.y)
             }) {
                 drawCircle(
@@ -143,6 +140,13 @@ fun OracleAnimatedCore(
                     radius = baseRadius * 1.3f,
                     center = center,
                     style = Stroke(width = 2.dp.toPx())
+                )
+                
+                // Inner orbital particle (fixed geometry placement)
+                drawCircle(
+                    color = if (isActive) TechCyan else NeonGreen,
+                    radius = 6.dp.toPx(),
+                    center = Offset(center.x, center.y - baseRadius * 1.3f)
                 )
             }
 

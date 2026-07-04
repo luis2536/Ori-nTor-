@@ -9,70 +9,114 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.GlassCard
+import com.example.ui.components.OracleAnimatedCore
 import com.example.ui.theme.*
-
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-data class TerminalMessage(val text: String, val isUser: Boolean, val isTyping: Boolean = false)
+data class TerminalMessage(val text: String, val isUser: Boolean, val isError: Boolean = false)
 
 @Composable
 fun AITerminalScreen() {
     var input by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<TerminalMessage>(
-        TerminalMessage("Conectado a CodeLlama (Local Node)...", false),
-        TerminalMessage("Esperando instrucciones.", false)
+        TerminalMessage("[SYS] Init Syntropy Edge Engine v2.4...", false),
+        TerminalMessage("[SYS] Mounting Local-First Virtual Swap...", false)
     ) }
 
     var isAiTyping by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
-    suspend fun simulateAiResponse(command: String) {
+    // Real-time log simulator (Background thread simulation)
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            val logs = listOf(
+                "[NET] WebSocket (ws://127.0.0.1:8080) Established.",
+                "[CORE] Allocating Thread Pool...",
+                "[WARN] Memory threshold optimized.",
+                "[SYS] Oracle 3D Engine initialized."
+            )
+            for (log in logs) {
+                delay((400..900).random().toLong())
+                withContext(Dispatchers.Main) {
+                    messages.add(TerminalMessage(log, false))
+                }
+            }
+        }
+    }
+
+    suspend fun processCommandAsync(command: String) {
         isAiTyping = true
-        val tempMsg = TerminalMessage("...", false, isTyping = true)
+        val tempMsg = TerminalMessage("...", false)
         messages.add(tempMsg)
         
-        delay(1000)
+        delay((300..800).random().toLong()) // Simulate processing latency
         
-        val response = when (command.uppercase()) {
-            "CHECK_NODE" -> "Estado: NODE_ALPHA Activo. Hashrate: 3200 H/s. Latencia: 42ms."
-            "PING_POOL" -> "Pool: pool.hashvault.pro:80. Respuesta: OK. Latencia: 18ms."
-            "OPTIMIZE_CPU" -> "Optimizando... Ajustando afinidad de hilos. Eficiencia +4%."
-            "SHOW_LOGS" -> "Último evento: Accepted share (diff 120002) - OK."
-            else -> "Comando '$command' no reconocido. Intente: CHECK_NODE, PING_POOL."
+        val responseMsg = try {
+            when (command.uppercase().trim()) {
+                "CHECK_NODE" -> TerminalMessage("Estado: NODE_ALPHA. CPU: 42°C. Memoria Libre: 1.2GB", false)
+                "PING" -> TerminalMessage("Latencia Loopback (Local): 4ms.", false)
+                "FORCE_ERROR" -> throw IllegalStateException("Simulated Segmentation Fault in Edge node.")
+                "CLEAR" -> {
+                    messages.clear()
+                    TerminalMessage("[SYS] Buffer de logs purgado.", false)
+                }
+                else -> TerminalMessage("Unrecognized command: '$command'", false, true)
+            }
+        } catch (e: Exception) {
+            TerminalMessage("[FATAL] ${e.message}", false, isError = true)
         }
         
         messages.remove(tempMsg)
-        messages.add(TerminalMessage(response, false))
+        messages.add(responseMsg)
         isAiTyping = false
     }
 
-    val quickCommands = listOf("CHECK_NODE", "PING_POOL", "OPTIMIZE_CPU", "SHOW_LOGS")
-    val coroutineScope = rememberCoroutineScope()
+    val quickCommands = listOf("CHECK_NODE", "PING", "FORCE_ERROR", "CLEAR")
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "IA POLIMORFA (TERMINAL)",
-            color = TechCyan,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-        )
-        Text(
-            text = "AGENT: CodeLlama 7B",
-            color = TextSecondary,
-            fontSize = 12.sp
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "SYNTROPY LAB (LOG VISOR)",
+                    color = TechCyan,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "EDGE COMPUTING | LOCAL-FIRST",
+                    color = TextSecondary,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+            // Advanced 3D Effects integration
+            OracleAnimatedCore(size = 48.dp, isActive = !isAiTyping)
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
 
         GlassCard(
@@ -83,28 +127,41 @@ fun AITerminalScreen() {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 reverseLayout = true
             ) {
                 items(messages.reversed()) { msg ->
+                    val timestamp = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (msg.isUser) Arrangement.End else Arrangement.Start
+                        horizontalArrangement = Arrangement.Start
                     ) {
+                        if (!msg.isUser) {
+                            Text(
+                                text = "[$timestamp] ",
+                                color = TextSecondary,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp
+                            )
+                        }
                         Text(
                             text = if (msg.isUser) "> ${msg.text}" else msg.text,
-                            color = if (msg.isUser) NeonGreen else TextPrimary,
+                            color = when {
+                                msg.isUser -> NeonGreen
+                                msg.isError -> RedAlert
+                                else -> TextPrimary
+                            },
                             fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            modifier = Modifier.fillMaxWidth(0.85f)
+                            fontSize = 11.sp,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         Row(
             modifier = Modifier
@@ -117,7 +174,7 @@ fun AITerminalScreen() {
                     onClick = {
                         messages.add(TerminalMessage(cmd, true))
                         coroutineScope.launch {
-                            simulateAiResponse(cmd)
+                            processCommandAsync(cmd)
                         }
                     },
                     label = { Text(cmd, color = TechCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace) },
@@ -133,11 +190,13 @@ fun AITerminalScreen() {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(Icons.Default.Terminal, contentDescription = null, tint = TechCyan, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             OutlinedTextField(
                 value = input,
                 onValueChange = { input = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Comando...", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 12.sp) },
+                placeholder = { Text("Ejecutar sys_command...", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 12.sp) },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = NeonGreen,
                     unfocusedBorderColor = GlassBorder,
@@ -152,11 +211,11 @@ fun AITerminalScreen() {
             IconButton(
                 onClick = {
                     if (input.isNotBlank() && !isAiTyping) {
-                        messages.add(TerminalMessage(input, true))
                         val cmd = input
+                        messages.add(TerminalMessage(cmd, true))
                         input = ""
                         coroutineScope.launch {
-                            simulateAiResponse(cmd)
+                            processCommandAsync(cmd)
                         }
                     }
                 },
@@ -164,9 +223,10 @@ fun AITerminalScreen() {
                     .background(GlassPanel, shape = MaterialTheme.shapes.small)
                     .border(1.dp, GlassBorder, MaterialTheme.shapes.small)
             ) {
-                Icon(Icons.Default.Send, contentDescription = "Send", tint = TechCyan)
+                Icon(Icons.Default.Send, contentDescription = "Send", tint = TechCyan, modifier = Modifier.size(18.dp))
             }
         }
         Spacer(modifier = Modifier.height(80.dp))
     }
 }
+
