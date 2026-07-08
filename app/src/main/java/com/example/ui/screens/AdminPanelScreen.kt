@@ -1,16 +1,16 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,20 +19,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.GlassCard
+import com.example.ui.components.OracleAnimatedCore
 import com.example.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.random.Random
 
 data class NodeInfo(val id: String, val ip: String, val status: String, val hashRate: Int, val region: String)
-data class PaymentRequest(val id: String, val userId: String, val amountBTC: String, val address: String, var approved: Boolean)
+data class LogEntry(val time: String, val message: String, val isError: Boolean = false)
+data class PartnerAudit(val totalMined: Double, val myShare: Double, val activeMiners: Int)
 
 @Composable
 fun AdminPanelScreen() {
     var selectedTab by remember { mutableStateOf(0) }
     
+    // Core Engine State (Local-First Simulation)
     val nodes = remember { mutableStateListOf(
         NodeInfo("NODE_ALPHA", "192.168.1.10", "ACTIVE", 3200, "US-EAST"),
         NodeInfo("NODE_BETA", "192.168.1.15", "ACTIVE", 2850, "EU-WEST"),
@@ -40,34 +51,64 @@ fun AdminPanelScreen() {
         NodeInfo("NODE_DELTA", "192.168.1.105", "ACTIVE", 4100, "AP-NORTHEAST")
     ) }
 
-    val payments = remember { mutableStateListOf(
-        PaymentRequest("TX1001", "NODE_BETA", "0.002", "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", false),
-        PaymentRequest("TX1002", "NODE_ALPHA", "0.015", "bc1qxw23rdygjrsqtzq2n0yrf2493p83kkfjhasdf", true)
-    ) }
+    val systemLogs = remember { mutableStateListOf<LogEntry>() }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Real-time AI Cerebro Engine Simulation (Non-blocking)
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            val initLogs = listOf(
+                "[SYS] Booting CEREBRO PRIME Node.js Controller...",
+                "[NET] WebSocket Server (0.0.0.0:8080) ONLINE",
+                "[AI] Heuristic analyzer engaged. Anomaly detection active.",
+                "[DB] Local-First IndexedDB synced with remote shards."
+            )
+            initLogs.forEach { log ->
+                val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                withContext(Dispatchers.Main) {
+                    systemLogs.add(LogEntry(time, log))
+                }
+                delay(300)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "ADMINISTRADOR (C&C)",
-            color = RedAlert,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "CONTROL MASIVO & ANALÍTICA",
-            color = TechCyan,
-            fontSize = 14.sp
-        )
+        // Hero Header with 3D Core
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "CEREBRO OMNI-CONTROL",
+                    color = RedAlert,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "EDGE POOL | IA | MARKETING",
+                    color = TechCyan,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+            OracleAnimatedCore(size = 56.dp, isActive = true)
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tabs
-        TabRow(
+        // Navigation Tabs (Minimalist)
+        ScrollableTabRow(
             selectedTabIndex = selectedTab,
             containerColor = DarkBackground,
             contentColor = TechCyan,
+            edgePadding = 0.dp,
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
                     Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
@@ -75,144 +116,99 @@ fun AdminPanelScreen() {
                 )
             }
         ) {
-            Tab(
-                selected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
-                icon = { Icon(Icons.Default.People, contentDescription = "Nodos") },
-                text = { Text("NODOS") },
-                selectedContentColor = NeonGreen,
-                unselectedContentColor = TextSecondary
+            val tabs = listOf(
+                "NODOS" to Icons.Default.Hub,
+                "MARKETING" to Icons.Default.Campaign,
+                "AUDITORÍA (50%)" to Icons.Default.VerifiedUser,
+                "LOGS AI" to Icons.Default.Terminal
             )
-            Tab(
-                selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
-                icon = { Icon(Icons.Default.Payment, contentDescription = "Pagos") },
-                text = { Text("PAGOS") },
-                selectedContentColor = NeonGreen,
-                unselectedContentColor = TextSecondary
-            )
+            tabs.forEachIndexed { index, (title, icon) ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    icon = { Icon(icon, contentDescription = title, modifier = Modifier.size(20.dp)) },
+                    text = { Text(title, fontSize = 10.sp, fontWeight = FontWeight.Bold) },
+                    selectedContentColor = NeonGreen,
+                    unselectedContentColor = TextSecondary
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (selectedTab == 0) {
-            NodesAdminView(nodes)
-        } else {
-            PaymentsAdminView(payments)
+        // Tab Content Switching
+        when (selectedTab) {
+            0 -> NodesAdminView(nodes)
+            1 -> MarketingView()
+            2 -> PartnerAuditView(nodes)
+            3 -> CerebroLogsView(systemLogs)
         }
     }
 }
 
 @Composable
-fun NodesAdminView(nodes: List<NodeInfo>) {
+fun NodesAdminView(nodes: MutableList<NodeInfo>) {
     val totalHashrate = nodes.sumOf { it.hashRate }
     val activeNodes = nodes.count { it.status == "ACTIVE" }
 
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GlassCard(modifier = Modifier.weight(1f)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("HASHRATE GLOBAL", color = TextSecondary, fontSize = 10.sp)
-                    Text("$totalHashrate H/s", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("TOTAL HASHRATE", color = TextSecondary, fontSize = 9.sp)
+                    Text("${totalHashrate / 1000.0} KH/s", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
             GlassCard(modifier = Modifier.weight(1f)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("NODOS ACTIVOS", color = TextSecondary, fontSize = 10.sp)
-                    Text("$activeNodes / ${nodes.size}", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("NODOS ACTIVOS", color = TextSecondary, fontSize = 9.sp)
+                    Text("$activeNodes / ${nodes.size}", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Regional Map Mock
-        GlassCard(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                // Background map lines mock
-                Canvas(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                    val w = size.width
-                    val h = size.height
-                    for (i in 0..5) {
-                        drawLine(
-                            color = TechCyan.copy(alpha = 0.1f),
-                            start = Offset(0f, h * Random.nextFloat()),
-                            end = Offset(w, h * Random.nextFloat()),
-                            strokeWidth = 2f,
-                            cap = StrokeCap.Round
-                        )
-                    }
-                }
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Public, contentDescription = null, tint = TechCyan)
-                        Text("US-EAST", color = TextSecondary, fontSize = 10.sp)
-                        Text("32%", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Public, contentDescription = null, tint = TechCyan)
-                        Text("EU-WEST", color = TextSecondary, fontSize = 10.sp)
-                        Text("45%", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.Public, contentDescription = null, tint = TechCyan)
-                        Text("AP-NORTH", color = TextSecondary, fontSize = 10.sp)
-                        Text("23%", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         Button(
-            onClick = { /* Simulate Kill Switch */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = RedAlert)
+            onClick = { 
+                // Disconnect logic
+                nodes.replaceAll { it.copy(status = "OFFLINE", hashRate = 0) }
+            },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = RedAlert),
+            shape = RoundedCornerShape(8.dp)
         ) {
-            Icon(Icons.Default.Warning, contentDescription = null, tint = DarkBackground)
+            Icon(Icons.Default.PowerOff, contentDescription = null, tint = DarkBackground)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("APAGADO GLOBAL (KILL SWITCH)", color = DarkBackground, fontWeight = FontWeight.Bold)
+            Text("DESCONEXIÓN MASIVA (KILL SWITCH)", color = DarkBackground, fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxHeight()
-        ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxHeight()) {
             items(nodes) { node ->
                 GlassCard(modifier = Modifier.fillMaxWidth()) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
                             Text(node.id, color = TextPrimary, fontWeight = FontWeight.Bold)
-                            Text("${node.ip} • ${node.region}", color = TextSecondary, fontSize = 12.sp)
-                            Text("Estado: ${node.status} | ${node.hashRate} H/s", color = if (node.status == "ACTIVE") NeonGreen else RedAlert, fontSize = 12.sp)
+                            Text("${node.ip} • ${node.region}", color = TextSecondary, fontSize = 11.sp)
+                            Text(
+                                text = if (node.status == "ACTIVE") "Conectado | ${node.hashRate} H/s" else "Desconectado",
+                                color = if (node.status == "ACTIVE") NeonGreen else RedAlert,
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
                         }
-                        
                         Row {
                             IconButton(onClick = { /* Approve */ }) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = "Activar", tint = NeonGreen)
+                                Icon(Icons.Default.Link, contentDescription = "Conectar", tint = NeonGreen)
                             }
                             IconButton(onClick = { /* Block */ }) {
-                                Icon(Icons.Default.Block, contentDescription = "Bloquear", tint = RedAlert)
+                                Icon(Icons.Default.LinkOff, contentDescription = "Desconectar", tint = RedAlert)
                             }
                         }
                     }
@@ -223,46 +219,120 @@ fun NodesAdminView(nodes: List<NodeInfo>) {
 }
 
 @Composable
-fun PaymentsAdminView(payments: MutableList<PaymentRequest>) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxHeight()
-    ) {
-        items(payments) { request ->
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(request.id, color = TechCyan, fontWeight = FontWeight.Bold)
-                        if (request.approved) {
-                            Text("PAGADO", color = NeonGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        } else {
-                            Text("PENDIENTE", color = RedAlert, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
+fun MarketingView() {
+    var message by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf("Ready") }
+    
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.ChatBubble, contentDescription = null, tint = NeonGreen)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("WHATSAPP API MASIVO", color = TechCyan, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = message,
+                    onValueChange = { message = it },
+                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    placeholder = { Text("Mensaje promocional para red de mineros...", color = TextSecondary) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NeonGreen,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    )
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { status = "Enviando a 12,400 contactos..." },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = TechCyan)
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = null, tint = DarkBackground)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("EJECUTAR CAMPAÑA", color = DarkBackground, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(status, color = NeonGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            }
+        }
+    }
+}
+
+@Composable
+fun PartnerAuditView(nodes: List<NodeInfo>) {
+    val activeCount = nodes.count { it.status == "ACTIVE" }
+    // Simulated real-time financial data
+    val totalMined = 4.251
+    val partnerShare = totalMined * 0.50
+    
+    Column {
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Security, contentDescription = null, tint = TechCyan)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("PANEL DE SOCIO (AUDITORÍA 50%)", color = TextPrimary, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text("TOTAL MINADO (POOL)", color = TextSecondary, fontSize = 10.sp)
+                        Text("$totalMined BTC", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Usuario: ${request.userId}", color = TextPrimary, fontSize = 14.sp)
-                    Text("Monto: ${request.amountBTC} BTC", color = NeonGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text("Wallet: ${request.address}", color = TextSecondary, fontSize = 10.sp, maxLines = 1)
-                    
-                    if (!request.approved) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = {
-                                val index = payments.indexOf(request)
-                                if (index != -1) {
-                                    payments[index] = request.copy(approved = true)
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
-                        ) {
-                            Text("APROBAR PAGO Y ENVIAR BTC", color = DarkBackground, fontWeight = FontWeight.Bold)
-                        }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("TU PARTICIPACIÓN (50%)", color = TechCyan, fontSize = 10.sp)
+                        Text("$partnerShare BTC", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                Divider(color = GlassBorder)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("MINEROS VERIFICADOS", color = TextSecondary, fontSize = 10.sp)
+                Text("$activeCount Nodos Activos", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { /* Request withdrawal */ },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                ) {
+                    Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = DarkBackground)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("SOLICITAR RETIRO (SOCIO)", color = DarkBackground, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CerebroLogsView(logs: List<LogEntry>) {
+    GlassCard(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            reverseLayout = true
+        ) {
+            items(logs.reversed()) { log ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "[${log.time}] ",
+                        color = TextSecondary,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 9.sp
+                    )
+                    Text(
+                        text = log.message,
+                        color = if (log.isError) RedAlert else TechCyan,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp
+                    )
                 }
             }
         }
