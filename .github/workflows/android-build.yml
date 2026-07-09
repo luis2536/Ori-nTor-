@@ -26,7 +26,9 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
 
     - name: Generate Gradle Wrapper if missing
-      run: if [ ! -f "gradlew" ]; then gradle wrapper; fi
+      run: |
+        rm -f gradle/wrapper/gradle-wrapper.jar
+        gradle wrapper --gradle-version 8.7 --distribution-type bin
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
