@@ -49,7 +49,10 @@ fun AITerminalScreen() {
                 "[NET] WebSocket (ws://127.0.0.1:8080) Established.",
                 "[CORE] Allocating Thread Pool...",
                 "[WARN] Memory threshold optimized.",
-                "[SYS] Oracle 3D Engine initialized."
+                "[SYS] Oracle 3D Engine initialized.",
+                "[AI] Inicializando Red Neuronal CEREBRO-OMNI-MAX...",
+                "[AI] Conectado a clúster de supercomputadoras descentralizado.",
+                "[AI] Analizando patrones criptográficos en tiempo real..."
             )
             for (log in logs) {
                 delay((400..900).random().toLong())
