@@ -117,12 +117,12 @@ fun AdminPanelScreen() {
                 )
             }
         ) {
-            val tabs = listOf(
-                "NODOS" to Icons.Default.Hub,
-                "MARKETING" to Icons.Default.Campaign,
-                "AUDITORÍA (50%)" to Icons.Default.VerifiedUser,
-                "LOGS AI" to Icons.Default.Terminal
-            )
+                val tabs = listOf(
+                    "NODOS" to Icons.Default.Hub,
+                    "MARKETING" to Icons.Default.Campaign,
+                    "SOCIA (50%)" to Icons.Default.VerifiedUser,
+                    "LOGS AI" to Icons.Default.Terminal
+                )
             tabs.forEachIndexed { index, (title, icon) ->
                 Tab(
                     selected = selectedTab == index,
@@ -222,15 +222,41 @@ fun NodesAdminView(nodes: MutableList<NodeInfo>) {
 @Composable
 fun MarketingView() {
     var message by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("Ready") }
+    var apiKey by remember { mutableStateOf("sk-wa-api-XXXXXXXXXXXXXXXXXXXX") }
+    var status by remember { mutableStateOf("Node.js Server: ONLINE | WhatsApp API: Conectada") }
     
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.SettingsApi, contentDescription = null, tint = TechCyan)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("CONFIGURACIÓN DE APIS", color = TechCyan, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = apiKey,
+                    onValueChange = { apiKey = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("WhatsApp API Key (Twilio/Meta)", color = TextSecondary) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NeonGreen,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    )
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.ChatBubble, contentDescription = null, tint = NeonGreen)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("WHATSAPP API MASIVO", color = TechCyan, fontWeight = FontWeight.Bold)
+                    Text("WHATSAPP API MASIVO", color = NeonGreen, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
@@ -247,13 +273,13 @@ fun MarketingView() {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { status = "Enviando a 12,400 contactos..." },
+                    onClick = { status = "Enviando a 12,400 contactos mediante clúster Node.js..." },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = TechCyan)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = DarkBackground)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("EJECUTAR CAMPAÑA", color = DarkBackground, fontWeight = FontWeight.Bold)
+                    Text("EJECUTAR CAMPAÑA MASIVA", color = DarkBackground, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(status, color = NeonGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
@@ -275,7 +301,7 @@ fun PartnerAuditView(nodes: List<NodeInfo>) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = TechCyan)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("PANEL DE SOCIO (AUDITORÍA 50%)", color = TextPrimary, fontWeight = FontWeight.Bold)
+                    Text("PANEL DE SOCIA MÍUKER (AUDITORÍA 50%)", color = TextPrimary, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -285,7 +311,7 @@ fun PartnerAuditView(nodes: List<NodeInfo>) {
                         Text("$totalMined BTC", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("TU PARTICIPACIÓN (50%)", color = TechCyan, fontSize = 10.sp)
+                        Text("PARTICIPACIÓN MÍUKER (50%)", color = TechCyan, fontSize = 10.sp)
                         Text("$partnerShare BTC", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                 }
@@ -294,8 +320,8 @@ fun PartnerAuditView(nodes: List<NodeInfo>) {
                 HorizontalDivider(color = GlassBorder)
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text("MINEROS VERIFICADOS", color = TextSecondary, fontSize = 10.sp)
-                Text("$activeCount Nodos Activos", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("ESTADO DE NUBE DESCENTRALIZADA", color = TextSecondary, fontSize = 10.sp)
+                Text("$activeCount Nodos Activos Verificados por AI", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
@@ -305,7 +331,7 @@ fun PartnerAuditView(nodes: List<NodeInfo>) {
                 ) {
                     Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = DarkBackground)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("SOLICITAR RETIRO (SOCIO)", color = DarkBackground, fontWeight = FontWeight.Bold)
+                    Text("SOLICITAR RETIRO SEGURO (SOCIA)", color = DarkBackground, fontWeight = FontWeight.Bold)
                 }
             }
         }

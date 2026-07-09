@@ -79,10 +79,12 @@ fun AITerminalScreen() {
                     messages.clear()
                     TerminalMessage("[SYS] Buffer de logs purgado.", false)
                 }
-                "DEPLOY_AI" -> TerminalMessage("[AI] Neural Model v9 cargado en memoria. Predicción de mercado activa.", false)
-                "ACTIVATE_POOL" -> TerminalMessage("[POOL] Minería distribuida iniciada. 12,042 nodos enlazados.", false)
-                "SYNC_LEDGER" -> TerminalMessage("[LEDGER] Shards sincronizados con éxito. Hashrate óptimo.", false)
-                else -> TerminalMessage("Unrecognized command: '$command'", false, true)
+                "DEPLOY_AI" -> TerminalMessage("[AI] Neural Model CEREBRO-OMNI-MAX v10 cargado en memoria. Predicción de mercado y minería predictiva activa.", false)
+                "ACTIVATE_POOL" -> TerminalMessage("[POOL] Minería distribuida iniciada. 12,042 nodos enlazados mediante WebSocket Seguro.", false)
+                "SYNC_LEDGER" -> TerminalMessage("[LEDGER] Shards descentralizados sincronizados con éxito. Hashrate óptimo (PetaHash).", false)
+                "NODE_JS_START" -> TerminalMessage("[SERVER] Clúster Node.js iniciado en modo maestro. Balanceador de carga AI Activo.", false)
+                "HACK_MARKETING" -> TerminalMessage("[MARKETING] Campaña agresiva lanzada a 12,400 contactos con APIs de WhatsApp. Conversión estimada: 38%.", false)
+                else -> TerminalMessage("Comando no reconocido. Pruebe: CHECK_NODE, PING, DEPLOY_AI, NODE_JS_START", false, true)
             }
         } catch (e: Exception) {
             TerminalMessage("[FATAL] ${e.message}", false, isError = true)
@@ -93,7 +95,7 @@ fun AITerminalScreen() {
         isAiTyping = false
     }
 
-    val quickCommands = listOf("CHECK_NODE", "PING", "FORCE_ERROR", "CLEAR", "DEPLOY_AI", "ACTIVATE_POOL", "SYNC_LEDGER")
+    val quickCommands = listOf("CHECK_NODE", "PING", "FORCE_ERROR", "CLEAR", "DEPLOY_AI", "ACTIVATE_POOL", "SYNC_LEDGER", "NODE_JS_START", "HACK_MARKETING")
 
     Column(
         modifier = Modifier
