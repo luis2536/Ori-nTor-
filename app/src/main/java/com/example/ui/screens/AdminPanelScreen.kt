@@ -229,7 +229,7 @@ fun MarketingView() {
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.SettingsApi, contentDescription = null, tint = TechCyan)
+                    Icon(Icons.Default.Settings, contentDescription = null, tint = TechCyan)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("CONFIGURACIÓN DE APIS", color = TechCyan, fontWeight = FontWeight.Bold)
                 }
