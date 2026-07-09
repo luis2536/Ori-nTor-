@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,7 +56,7 @@ fun SocialScreen() {
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.TrendingUp,
+                            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                             contentDescription = "Trending",
                             tint = NeonGreen,
                             modifier = Modifier.size(20.dp)
@@ -174,7 +174,7 @@ fun SocialScreen() {
                     }
                 }
             ) {
-                Icon(Icons.Default.Send, contentDescription = "Send", tint = TechCyan)
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = TechCyan)
             }
         }
         Spacer(modifier = Modifier.height(80.dp))

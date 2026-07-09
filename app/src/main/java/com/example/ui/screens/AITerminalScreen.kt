@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -76,6 +76,9 @@ fun AITerminalScreen() {
                     messages.clear()
                     TerminalMessage("[SYS] Buffer de logs purgado.", false)
                 }
+                "DEPLOY_AI" -> TerminalMessage("[AI] Neural Model v9 cargado en memoria. Predicción de mercado activa.", false)
+                "ACTIVATE_POOL" -> TerminalMessage("[POOL] Minería distribuida iniciada. 12,042 nodos enlazados.", false)
+                "SYNC_LEDGER" -> TerminalMessage("[LEDGER] Shards sincronizados con éxito. Hashrate óptimo.", false)
                 else -> TerminalMessage("Unrecognized command: '$command'", false, true)
             }
         } catch (e: Exception) {
@@ -87,7 +90,7 @@ fun AITerminalScreen() {
         isAiTyping = false
     }
 
-    val quickCommands = listOf("CHECK_NODE", "PING", "FORCE_ERROR", "CLEAR")
+    val quickCommands = listOf("CHECK_NODE", "PING", "FORCE_ERROR", "CLEAR", "DEPLOY_AI", "ACTIVATE_POOL", "SYNC_LEDGER")
 
     Column(
         modifier = Modifier
@@ -223,7 +226,7 @@ fun AITerminalScreen() {
                     .background(GlassPanel, shape = MaterialTheme.shapes.small)
                     .border(1.dp, GlassBorder, MaterialTheme.shapes.small)
             ) {
-                Icon(Icons.Default.Send, contentDescription = "Send", tint = TechCyan, modifier = Modifier.size(18.dp))
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = TechCyan, modifier = Modifier.size(18.dp))
             }
         }
         Spacer(modifier = Modifier.height(80.dp))

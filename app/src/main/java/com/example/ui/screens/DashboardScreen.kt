@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -359,7 +360,7 @@ fun DashboardScreen() {
                     onClick = { showFaqDialog = true },
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Icon(Icons.Default.Help, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Guía Tecno Spark 30C & Termux", color = NeonGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }

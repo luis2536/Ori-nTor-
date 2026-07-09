@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.*
@@ -250,7 +251,7 @@ fun MarketingView() {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = TechCyan)
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = null, tint = DarkBackground)
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = DarkBackground)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("EJECUTAR CAMPAÑA", color = DarkBackground, fontWeight = FontWeight.Bold)
                 }
@@ -290,7 +291,7 @@ fun PartnerAuditView(nodes: List<NodeInfo>) {
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
-                Divider(color = GlassBorder)
+                HorizontalDivider(color = GlassBorder)
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text("MINEROS VERIFICADOS", color = TextSecondary, fontSize = 10.sp)
