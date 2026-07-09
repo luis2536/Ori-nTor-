@@ -53,6 +53,17 @@ fun OracleAnimatedCore(
         label = "inner_rotation"
     )
 
+    // Third ring rotation angle
+    val outerRotationAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "outer_rotation"
+    )
+
     // Pulse effect
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.92f,
@@ -85,11 +96,14 @@ fun OracleAnimatedCore(
             val center = Offset(width / 2, height / 2)
             val baseRadius = width * 0.35f * pulseScale
 
+            val primaryColor = if (isActive) NeonGreen else TechCyan
+            val secondaryColor = if (isActive) TechCyan else NeonGreen
+
             // Draw center glowing core (the Oracle eye)
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        if (isActive) NeonGreen.copy(alpha = glowAlpha) else TechCyan.copy(alpha = glowAlpha),
+                        primaryColor.copy(alpha = glowAlpha),
                         Color.Transparent
                     ),
                     center = center,
@@ -101,64 +115,94 @@ fun OracleAnimatedCore(
 
             // Inner solid core
             drawCircle(
-                color = if (isActive) NeonGreen else TechCyan,
+                color = primaryColor,
                 radius = baseRadius * 0.15f,
                 center = center
             )
 
-            // 1st 3D Angled Ring (Scaled on Y-axis to simulate 3D projection)
+            // 1st 3D Angled Ring (Horizontal-ish)
             withTransform({
                 translate(center.x, center.y)
-                scale(scaleX = 1f, scaleY = 0.3f) // Tilt effect for 3D (apply AFTER rotation to keep ellipse static)
+                scale(scaleX = 1f, scaleY = 0.35f) // Tilt effect for 3D
                 rotate(rotationAngle)
                 translate(-center.x, -center.y)
             }) {
                 drawCircle(
-                    color = if (isActive) NeonGreen.copy(alpha = 0.8f) else TechCyan.copy(alpha = 0.8f),
+                    color = primaryColor.copy(alpha = 0.8f),
                     radius = baseRadius * 1.1f,
                     center = center,
-                    style = Stroke(width = 3.dp.toPx())
+                    style = Stroke(width = 3.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(20f, 10f), 0f))
                 )
                 
-                // Outer orbital particle on the ring (fixed geometry placement)
+                // Outer orbital particle on the ring
                 drawCircle(
-                    color = if (isActive) RedAlert else NeonGreen,
+                    color = RedAlert,
                     radius = 8.dp.toPx(),
                     center = Offset(center.x + baseRadius * 1.1f, center.y)
                 )
+                drawCircle(
+                    color = primaryColor,
+                    radius = 4.dp.toPx(),
+                    center = Offset(center.x - baseRadius * 1.1f, center.y)
+                )
             }
 
-            // 2nd 3D Angled Ring (Inverted tilt and reverse rotation)
+            // 2nd 3D Angled Ring (Vertical-ish)
             withTransform({
                 translate(center.x, center.y)
-                scale(scaleX = 0.3f, scaleY = 1.0f) // Vertical tilt effect
-                rotate(innerRotationAngle)
+                rotate(45f) // Offset the ellipse angle itself
+                scale(scaleX = 0.35f, scaleY = 1.0f) // Vertical tilt effect
+                rotate(innerRotationAngle) // Counter-rotate contents
                 translate(-center.x, -center.y)
             }) {
                 drawCircle(
-                    color = if (isActive) TechCyan.copy(alpha = 0.6f) else NeonGreen.copy(alpha = 0.6f),
+                    color = secondaryColor.copy(alpha = 0.6f),
                     radius = baseRadius * 1.3f,
                     center = center,
                     style = Stroke(width = 2.dp.toPx())
                 )
                 
-                // Inner orbital particle (fixed geometry placement)
+                // Inner orbital particle
                 drawCircle(
-                    color = if (isActive) TechCyan else NeonGreen,
+                    color = secondaryColor,
                     radius = 6.dp.toPx(),
                     center = Offset(center.x, center.y - baseRadius * 1.3f)
+                )
+            }
+            
+            // 3rd 3D Angled Ring (Opposite Vertical-ish)
+            withTransform({
+                translate(center.x, center.y)
+                rotate(-45f) // Offset the ellipse angle itself
+                scale(scaleX = 0.35f, scaleY = 1.0f) // Vertical tilt effect
+                rotate(outerRotationAngle) // Forward-rotate contents
+                translate(-center.x, -center.y)
+            }) {
+                drawCircle(
+                    color = RedAlert.copy(alpha = 0.5f),
+                    radius = baseRadius * 1.5f,
+                    center = center,
+                    style = Stroke(width = 1.dp.toPx())
+                )
+                
+                // Outer orbital particle
+                drawCircle(
+                    color = RedAlert,
+                    radius = 5.dp.toPx(),
+                    center = Offset(center.x, center.y + baseRadius * 1.5f)
                 )
             }
 
             // Tech indicators / Concentric ticks (Rotating outer ring)
             rotate(rotationAngle) {
-                val numTicks = 24
+                val numTicks = 36
                 val tickLength = 12.dp.toPx()
-                val startRadius = baseRadius * 1.4f
+                val startRadius = baseRadius * 1.6f
                 val endRadius = startRadius + tickLength
 
                 for (i in 0 until numTicks) {
                     val angle = (i * 360f / numTicks)
+                    if (i % 3 == 0) continue // Leave gaps for tech look
                     val rad = Math.toRadians(angle.toDouble())
                     val startX = center.x + startRadius * cos(rad).toFloat()
                     val startY = center.y + startRadius * sin(rad).toFloat()
@@ -166,17 +210,17 @@ fun OracleAnimatedCore(
                     val endY = center.y + endRadius * sin(rad).toFloat()
 
                     drawLine(
-                        color = (if (isActive) NeonGreen else TechCyan).copy(alpha = 0.4f),
+                        color = primaryColor.copy(alpha = 0.5f),
                         start = Offset(startX, startY),
                         end = Offset(endX, endY),
-                        strokeWidth = 2.dp.toPx(),
+                        strokeWidth = (if (i % 2 == 0) 2.dp else 1.dp).toPx(),
                         cap = StrokeCap.Round
                     )
                 }
             }
 
             // Cyberpunk Corner Bracket Decorations
-            val bracketOffset = baseRadius * 1.5f
+            val bracketOffset = baseRadius * 1.8f
             val bracketLength = 15.dp.toPx()
             val corners = listOf(
                 Offset(center.x - bracketOffset, center.y - bracketOffset),
@@ -191,19 +235,27 @@ fun OracleAnimatedCore(
 
                 // Draw horizontal line of bracket
                 drawLine(
-                    color = TechCyan.copy(alpha = 0.5f),
+                    color = TechCyan.copy(alpha = 0.8f),
                     start = corner,
                     end = Offset(corner.x + bracketLength * signX, corner.y),
-                    strokeWidth = 1.5.dp.toPx()
+                    strokeWidth = 2.dp.toPx()
                 )
                 // Draw vertical line of bracket
                 drawLine(
-                    color = TechCyan.copy(alpha = 0.5f),
+                    color = TechCyan.copy(alpha = 0.8f),
                     start = corner,
                     end = Offset(corner.x, corner.y + bracketLength * signY),
-                    strokeWidth = 1.5.dp.toPx()
+                    strokeWidth = 2.dp.toPx()
+                )
+                
+                // Add a small dot to the corner
+                drawCircle(
+                    color = primaryColor,
+                    radius = 2.dp.toPx(),
+                    center = corner
                 )
             }
         }
     }
 }
+
