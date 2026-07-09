@@ -374,7 +374,7 @@ fun DashboardScreen() {
         ) {
             Column {
                 Text(
-                    text = "PANEL DE NODO",
+                    text = "PANEL CEREBRO NODO OMNI-MAX",
                     color = TechCyan,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
