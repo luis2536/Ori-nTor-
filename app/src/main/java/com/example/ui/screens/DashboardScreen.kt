@@ -105,7 +105,14 @@ fun DashboardScreen() {
             }
             
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            if (isLocalEngine) {
+            if (cpuTemp > 75) {
+                consoleLogs.add(MiningLog(time, "[AI ALERT] Thermal Throttling Detectado. Pausando procesos...", true))
+                currentHashrate = 0
+                isLocalEngine = false // simulando pausa
+                delay(3000)
+            } else if (cpuTemp > 70) {
+                consoleLogs.add(MiningLog(time, "[AI WARNING] Predicción térmica alta. Riesgo de estrangulamiento inminente.", true))
+            } else if (isLocalEngine) {
                 if (Random.nextFloat() > 0.6f) {
                     consoleLogs.add(MiningLog(time, "[WS_FRAME] Received Job #${Random.nextInt(1000, 9999)} - Diff: 8000"))
                 } else if (Random.nextFloat() > 0.85f) {
