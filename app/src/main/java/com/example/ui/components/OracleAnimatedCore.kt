@@ -113,9 +113,17 @@ fun OracleAnimatedCore(
                 center = center
             )
 
-            // Inner solid core
+            // Inner solid core with 3D specular gradient
             drawCircle(
-                color = primaryColor,
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color.White,
+                        primaryColor,
+                        primaryColor.copy(alpha = 0.8f)
+                    ),
+                    center = Offset(center.x - baseRadius * 0.04f, center.y - baseRadius * 0.04f),
+                    radius = baseRadius * 0.15f
+                ),
                 radius = baseRadius * 0.15f,
                 center = center
             )
@@ -133,19 +141,39 @@ fun OracleAnimatedCore(
                     center = center,
                     style = Stroke(width = 3.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(20f, 10f), 0f))
                 )
-                
-                // Outer orbital particle on the ring
-                drawCircle(
-                    color = RedAlert,
-                    radius = 8.dp.toPx(),
-                    center = Offset(center.x + baseRadius * 1.1f, center.y)
-                )
-                drawCircle(
-                    color = primaryColor,
-                    radius = 4.dp.toPx(),
-                    center = Offset(center.x - baseRadius * 1.1f, center.y)
-                )
             }
+
+            // Calculate precise 3D orbital particle coordinates (outside withTransform to avoid squishing)
+            val r1AngleRad = Math.toRadians(rotationAngle.toDouble())
+            val r1Radius = baseRadius * 1.1f
+            val p1Pos = center + Offset(
+                x = r1Radius * cos(r1AngleRad).toFloat(),
+                y = r1Radius * sin(r1AngleRad).toFloat() * 0.35f
+            )
+            val p1OppPos = center + Offset(
+                x = r1Radius * cos(r1AngleRad + Math.PI).toFloat(),
+                y = r1Radius * sin(r1AngleRad + Math.PI).toFloat() * 0.35f
+            )
+
+            // Draw Ring 1 Particles with 3D sphere gradient shading
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White, RedAlert, Color(0xFF8B0000)),
+                    center = Offset(p1Pos.x - 2.dp.toPx(), p1Pos.y - 2.dp.toPx()),
+                    radius = 8.dp.toPx()
+                ),
+                radius = 8.dp.toPx(),
+                center = p1Pos
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White, primaryColor, primaryColor.copy(alpha = 0.7f)),
+                    center = Offset(p1OppPos.x - 1.dp.toPx(), p1OppPos.y - 1.dp.toPx()),
+                    radius = 4.dp.toPx()
+                ),
+                radius = 4.dp.toPx(),
+                center = p1OppPos
+            )
 
             // 2nd 3D Angled Ring (Vertical-ish)
             withTransform({
@@ -161,15 +189,31 @@ fun OracleAnimatedCore(
                     center = center,
                     style = Stroke(width = 2.dp.toPx())
                 )
-                
-                // Inner orbital particle
-                drawCircle(
-                    color = secondaryColor,
-                    radius = 6.dp.toPx(),
-                    center = Offset(center.x, center.y - baseRadius * 1.3f)
-                )
             }
-            
+
+            // Calculate precise 3D orbital particle coordinates for Ring 2
+            val r2AngleRad = Math.toRadians(innerRotationAngle.toDouble())
+            val r2Radius = baseRadius * 1.3f
+            val r2XUnrotated = r2Radius * cos(r2AngleRad).toFloat() * 0.35f
+            val r2YUnrotated = r2Radius * sin(r2AngleRad).toFloat()
+            val cos45 = cos(Math.toRadians(45.0)).toFloat()
+            val sin45 = sin(Math.toRadians(45.0)).toFloat()
+            val p2Pos = center + Offset(
+                x = r2XUnrotated * cos45 - r2YUnrotated * sin45,
+                y = r2XUnrotated * sin45 + r2YUnrotated * cos45
+            )
+
+            // Draw Ring 2 Particle with 3D sphere gradient shading
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White, secondaryColor, secondaryColor.copy(alpha = 0.7f)),
+                    center = Offset(p2Pos.x - 1.5f.dp.toPx(), p2Pos.y - 1.5f.dp.toPx()),
+                    radius = 6.dp.toPx()
+                ),
+                radius = 6.dp.toPx(),
+                center = p2Pos
+            )
+
             // 3rd 3D Angled Ring (Opposite Vertical-ish)
             withTransform({
                 translate(center.x, center.y)
@@ -184,14 +228,30 @@ fun OracleAnimatedCore(
                     center = center,
                     style = Stroke(width = 1.dp.toPx())
                 )
-                
-                // Outer orbital particle
-                drawCircle(
-                    color = RedAlert,
-                    radius = 5.dp.toPx(),
-                    center = Offset(center.x, center.y + baseRadius * 1.5f)
-                )
             }
+
+            // Calculate precise 3D orbital particle coordinates for Ring 3
+            val r3AngleRad = Math.toRadians(outerRotationAngle.toDouble())
+            val r3Radius = baseRadius * 1.5f
+            val r3XUnrotated = r3Radius * cos(r3AngleRad).toFloat() * 0.35f
+            val r3YUnrotated = r3Radius * sin(r3AngleRad).toFloat()
+            val cosMinus45 = cos(Math.toRadians(-45.0)).toFloat()
+            val sinMinus45 = sin(Math.toRadians(-45.0)).toFloat()
+            val p3Pos = center + Offset(
+                x = r3XUnrotated * cosMinus45 - r3YUnrotated * sinMinus45,
+                y = r3XUnrotated * sinMinus45 + r3YUnrotated * cosMinus45
+            )
+
+            // Draw Ring 3 Particle with 3D sphere gradient shading
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White, RedAlert, Color(0xFF8B0000)),
+                    center = Offset(p3Pos.x - 1.dp.toPx(), p3Pos.y - 1.dp.toPx()),
+                    radius = 5.dp.toPx()
+                ),
+                radius = 5.dp.toPx(),
+                center = p3Pos
+            )
 
             // Tech indicators / Concentric ticks (Rotating outer ring)
             rotate(rotationAngle) {
