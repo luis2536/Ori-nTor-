@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.GlassCard
 import com.example.ui.components.OracleAnimatedCore
+import com.example.ui.components.AnimatedPieChart
 import com.example.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -316,6 +317,18 @@ fun PartnerAuditView(nodes: List<NodeInfo>) {
                     }
                 }
                 
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = GlassBorder)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    AnimatedPieChart(
+                        values = listOf(totalMined.toFloat() - partnerShare.toFloat(), partnerShare.toFloat()),
+                        colors = listOf(TechCyan, NeonGreen),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = GlassBorder)
                 Spacer(modifier = Modifier.height(16.dp))
