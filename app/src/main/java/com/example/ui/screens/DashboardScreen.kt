@@ -40,53 +40,68 @@ data class MiningLog(val timestamp: String, val message: String, val isError: Bo
 fun DashboardScreen() {
     var isMining by remember { mutableStateOf(false) }
     var currentHashrate by remember { mutableStateOf(0) }
-    var cpuTemp by remember { mutableStateOf(45) }
-    var ramUsage by remember { mutableStateOf(2.1f) }
-    var balance by remember { mutableStateOf(0.00421) }
+    var cpuTemp by remember { mutableStateOf(42) }
+    var ramUsage by remember { mutableStateOf(2.0f) }
+    var balance by remember { mutableStateOf(0.0018542) }
     val hashrateHistory = remember { mutableStateListOf<Int>() }
     val consoleLogs = remember { mutableStateListOf<MiningLog>() }
     
+    // Google Login Simulation State
+    var isGoogleLoggedIn by remember { mutableStateOf(false) }
+    var loggedInEmail by remember { mutableStateOf("usuario.orion@gmail.com") }
+    var loggedInName by remember { mutableStateOf("Luis Gerardo Ramos") }
+    var xmrWalletAddress by remember { mutableStateOf("44AFFq5kSiGbU...Y8bS3q") }
+    var showLoginDialog by remember { mutableStateOf(false) }
+
+    // World Connection Details
+    var pingSpainToCerebro by remember { mutableStateOf(42) } // Latency in ms (Spain to Cerebro Server)
+    var signalStability by remember { mutableStateOf(99.4f) }
+    var packetSyncCount by remember { mutableStateOf(1402) }
+    var connectionRegion by remember { mutableStateOf("España (Madrid) ➡️ Cerebro Master (LATAM)") }
+
+    // AI RandomX Optimization Parameters
+    var showAutotuneDialog by remember { mutableStateOf(false) }
+    var selectedCpuModel by remember { mutableStateOf("MediaTek Helio G36 (Octa-Core)") }
+    var coreThreads by remember { mutableStateOf(4f) } // Default slider 4 hilos
+    var virtualSwapEnabled by remember { mutableStateOf(true) } // Memory Fusion +4GB
+    var overlockSafetyProfile by remember { mutableStateOf("Balanceado Óptimo") } // Safe, Extreme, Eco
+    var isAutotuningInProgress by remember { mutableStateOf(false) }
+    var calculatedMaxEfficiency by remember { mutableStateOf(1650) } // Optimized H/s prediction
+
     var showPaymentDialog by remember { mutableStateOf(false) }
     var btcAddress by remember { mutableStateOf("") }
     
-    var poolUrl by remember { mutableStateOf("stratum+tcp://pool.hashvault.pro:80") }
-    var threads by remember { mutableStateOf("8") }
-
-    var isLocalEngine by remember { mutableStateOf(true) }
+    var poolUrl by remember { mutableStateOf("stratum+tcp://pool.orionthor.io:3333") }
     var showFaqDialog by remember { mutableStateOf(false) }
 
     val logScrollState = rememberLazyListState()
 
-    // Simulation loop
-    LaunchedEffect(isMining, isLocalEngine) {
+    // Real-Time Simulation Routine
+    LaunchedEffect(isMining, isGoogleLoggedIn, virtualSwapEnabled, coreThreads) {
         if (!isMining) {
             currentHashrate = 0
-            cpuTemp = 45
-            ramUsage = 2.1f
+            cpuTemp = 40
+            ramUsage = if (virtualSwapEnabled) 1.9f else 2.3f
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            consoleLogs.add(MiningLog(time, "[INFO] Orion SoC stopped."))
+            consoleLogs.add(MiningLog(time, "[NODO] Sistema en espera. Listo para sincronización."))
             return@LaunchedEffect
         }
         
         val startTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-        if (isLocalEngine) {
-            consoleLogs.add(MiningLog(startTime, "[INIT] Starting Local Node Engine (Tecno Spark 30C Optimization)..."))
-            delay(500)
-            consoleLogs.add(MiningLog(startTime, "[MEM] Physical RAM: 4.0GB | Virtual Swap: 4.0GB Active."))
-            delay(500)
-            consoleLogs.add(MiningLog(startTime, "[NET] Binding WebSocket Server on ws://127.0.0.1:8080/mining..."))
-            delay(700)
-            consoleLogs.add(MiningLog(startTime, "[WS] WebSocket server started on port 8080."))
-            consoleLogs.add(MiningLog(startTime, "[WS] Local Node client connected. Handshake OK."))
-            consoleLogs.add(MiningLog(startTime, "[CPU] Helio G36 detected. Allocating 4 threads for thermal safety..."))
+        consoleLogs.add(MiningLog(startTime, "[CONNECT] Estableciendo túnel seguro SSL con Cerebro Principal..."))
+        delay(600)
+        consoleLogs.add(MiningLog(startTime, "[SSL] Conexión establecida desde Madrid (ES) a Servidor Cerebro (LATAM). Encriptación TLS_AES_256_GCM_SHA384."))
+        delay(600)
+        
+        if (isGoogleLoggedIn) {
+            consoleLogs.add(MiningLog(startTime, "[AUTH] Login verificado como: $loggedInEmail. Hashrate vinculado a cartera central."))
         } else {
-            consoleLogs.add(MiningLog(startTime, "[INIT] Starting XMRig via Termux..."))
-            delay(500)
-            consoleLogs.add(MiningLog(startTime, "[NET] Connecting to $poolUrl..."))
-            delay(800)
-            consoleLogs.add(MiningLog(startTime, "[NET] Connected. Authorized as ORION_NODE."))
-            consoleLogs.add(MiningLog(startTime, "[CPU] Allocating $threads threads..."))
+            consoleLogs.add(MiningLog(startTime, "[WARN] Ejecutando como nodo ANÓNIMO. Vincule su Gmail para reclamar balance directamente.", true))
         }
+
+        delay(500)
+        consoleLogs.add(MiningLog(startTime, "[MEM] Análisis de hardware: Virtual Swap / Memory Fusion de ${if (virtualSwapEnabled) "+4GB" else "Inactivo"}."))
+        consoleLogs.add(MiningLog(startTime, "[RANDOMX] Ajustando minero XMRig a ${coreThreads.toInt()} hilos de procesamiento."))
         
         if (hashrateHistory.isEmpty()) {
             for (i in 0..20) hashrateHistory.add(0)
@@ -94,39 +109,45 @@ fun DashboardScreen() {
 
         while (isMining) {
             delay(1000)
-            currentHashrate = if (isLocalEngine) Random.nextInt(800, 1800) else Random.nextInt(1200, 3500)
-            cpuTemp = if (isLocalEngine) Random.nextInt(55, 72) else Random.nextInt(65, 85)
-            ramUsage = if (isLocalEngine) (2.8f + Random.nextFloat() * 0.4f) else (3.5f + Random.nextFloat() * 1.5f)
-            balance += if (isLocalEngine) 0.00000007 else 0.00000015
             
+            // Calculate base hashrate depending on threads & virtual memory fusion
+            val baseEfficiency = if (virtualSwapEnabled) 1400 else 900
+            val threadMultiplier = (coreThreads / 4f)
+            currentHashrate = (baseEfficiency * threadMultiplier * Random.nextDouble(0.95, 1.05)).toInt()
+            
+            // Temperature increases with thread count
+            cpuTemp = (45 + (coreThreads * 7) + Random.nextInt(-2, 3)).toInt()
+            ramUsage = if (virtualSwapEnabled) {
+                (2.2f + (coreThreads * 0.15f) + Random.nextFloat() * 0.1f)
+            } else {
+                (3.4f + (coreThreads * 0.2f) + Random.nextFloat() * 0.1f)
+            }
+            
+            // Increment balance proportional to hashrate
+            balance += (currentHashrate * 0.0000000001)
+            packetSyncCount += 1
+            pingSpainToCerebro = Random.nextInt(38, 52)
+            signalStability = Random.nextFloat() * 1.5f + 98.2f
+
             hashrateHistory.add(currentHashrate)
             if (hashrateHistory.size > 20) {
                 hashrateHistory.removeAt(0)
             }
             
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            if (cpuTemp > 75) {
-                consoleLogs.add(MiningLog(time, "[AI ALERT] Thermal Throttling Detectado. Pausando procesos...", true))
-                currentHashrate = 0
-                isLocalEngine = false // simulando pausa
-                delay(3000)
-            } else if (cpuTemp > 70) {
-                consoleLogs.add(MiningLog(time, "[AI WARNING] Predicción térmica alta. Riesgo de estrangulamiento inminente.", true))
-            } else if (isLocalEngine) {
-                if (Random.nextFloat() > 0.6f) {
-                    consoleLogs.add(MiningLog(time, "[WS_FRAME] Received Job #${Random.nextInt(1000, 9999)} - Diff: 8000"))
-                } else if (Random.nextFloat() > 0.85f) {
-                    consoleLogs.add(MiningLog(time, "[WS_FRAME] Sent Share: Block verified locally. Response: ACCEPTED"))
-                }
-            } else {
-                if (Random.nextFloat() > 0.7f) {
-                    consoleLogs.add(MiningLog(time, "[POOL] Accepted share (diff 120002) - ${currentHashrate} H/s"))
-                } else if (Random.nextFloat() > 0.95f) {
-                    consoleLogs.add(MiningLog(time, "[WARN] Rejected share (stale)", true))
-                }
+            
+            if (cpuTemp > 78) {
+                consoleLogs.add(MiningLog(time, "[CRÍTICO] Alerta térmica (${cpuTemp}°C). Ejecutando desaceleración de hilos por protección.", true))
+                // Lower core activity
+                coreThreads = (coreThreads - 1).coerceAtLeast(1f)
+                delay(2000)
+            } else if (Random.nextFloat() > 0.85f) {
+                consoleLogs.add(MiningLog(time, "[WS] Paquete verificado en Cerebro Central. Latencia de red: ${pingSpainToCerebro}ms."))
+            } else if (Random.nextFloat() > 0.95f) {
+                consoleLogs.add(MiningLog(time, "[RANDOMX] ¡Bloque verificado y subido! Share aceptado por pool central XMR."))
             }
             
-            if (consoleLogs.size > 50) {
+            if (consoleLogs.size > 55) {
                 consoleLogs.removeAt(0)
             }
         }
@@ -138,21 +159,263 @@ fun DashboardScreen() {
         }
     }
 
+    // GMAIL LOGIN DIALOG
+    if (showLoginDialog) {
+        AlertDialog(
+            onDismissRequest = { showLoginDialog = false },
+            containerColor = DarkBackground,
+            titleContentColor = TechCyan,
+            textContentColor = TextPrimary,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AccountCircle, contentDescription = null, tint = TechCyan)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Autenticación Segura Gmail", fontSize = 16.sp)
+                }
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Conecte su cuenta Google oficial para sincronizar el hashrate global y recibir dividendos directamente en su wallet vinculada.", fontSize = 12.sp, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = loggedInEmail,
+                        onValueChange = { loggedInEmail = it },
+                        label = { Text("Correo Electrónico Gmail", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonGreen, unfocusedBorderColor = GlassBorder,
+                            focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = loggedInName,
+                        onValueChange = { loggedInName = it },
+                        label = { Text("Nombre de Usuario", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonGreen, unfocusedBorderColor = GlassBorder,
+                            focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = xmrWalletAddress,
+                        onValueChange = { xmrWalletAddress = it },
+                        label = { Text("Dirección de Pago XMR / Wallet", color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonGreen, unfocusedBorderColor = GlassBorder,
+                            focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isGoogleLoggedIn = true
+                        showLoginDialog = false
+                        val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                        consoleLogs.add(MiningLog(time, "[AUTH] Vinculación Gmail completa: $loggedInEmail. Wallet sincronizada."))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                ) {
+                    Text("VINCULAR CUENTA", color = DarkBackground, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLoginDialog = false }) {
+                    Text("CANCELAR", color = RedAlert, fontSize = 11.sp)
+                }
+            }
+        )
+    }
+
+    // AI AUTOTUNE DIALOG
+    if (showAutotuneDialog) {
+        AlertDialog(
+            onDismissRequest = { showAutotuneDialog = false },
+            containerColor = DarkBackground,
+            titleContentColor = TechCyan,
+            textContentColor = TextPrimary,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = NeonGreen)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Asistente de Optimización AI", fontSize = 16.sp)
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "El optimizador AI escanea los recursos internos de su teléfono para programar el kernel de RandomX de forma óptima.",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Text("PERFIL DE HARDWARE DETECTADO:", color = TechCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = GlassPanel)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("CPU: $selectedCpuModel", color = TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                            Text("RAM Física: 4.00 GB", color = TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                            Text("Memory Fusion (Virtual SWAP): ${if (virtualSwapEnabled) "Activo (+4.00 GB)" else "Inactivo"}", color = NeonGreen, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("CONFIGURACIÓN DE PARÁMETROS:", color = TechCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Chipset Selector Mockup
+                    Text("Modelo de Chipset:", color = TextSecondary, fontSize = 10.sp)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf("Helio G36", "Snapdragon 8 Gen", "Dimensity 9000").forEach { chip ->
+                            Button(
+                                onClick = { 
+                                    selectedCpuModel = if (chip.startsWith("Helio")) "$chip (Octa-Core) Tecno Spark" else "$chip Max-Core Premium"
+                                    calculatedMaxEfficiency = if (chip.startsWith("Helio")) 1650 else 4850
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedCpuModel.contains(chip)) NeonGreen else GlassPanel
+                                ),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(chip, fontSize = 9.sp, color = if (selectedCpuModel.contains(chip)) DarkBackground else TextPrimary)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Threads Slider
+                    Text("Hilos de Procesamiento: ${coreThreads.toInt()}", color = TextSecondary, fontSize = 11.sp)
+                    Slider(
+                        value = coreThreads,
+                        onValueChange = { coreThreads = it },
+                        valueRange = 1f..8f,
+                        steps = 6,
+                        colors = SliderDefaults.colors(
+                            thumbColor = NeonGreen,
+                            activeTrackColor = NeonGreen
+                        )
+                    )
+
+                    // Virtual Swap Memory Switch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Memory Fusion Swap (Virtual)", color = TextPrimary, fontSize = 12.sp)
+                            Text("Asigna swap file en almacenamiento flash", color = TextSecondary, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = virtualSwapEnabled,
+                            onCheckedChange = { virtualSwapEnabled = it },
+                            colors = SwitchDefaults.colors(checkedThumbColor = NeonGreen, checkedTrackColor = NeonGreen.copy(alpha = 0.5f))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Overclock profiles
+                    Text("Perfil Energético y Térmico:", color = TextSecondary, fontSize = 10.sp)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf("Eco Seguro", "Balanceado Óptimo", "Extreme Overclock").forEach { profile ->
+                            Button(
+                                onClick = { overlockSafetyProfile = profile },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (overlockSafetyProfile == profile) TechCyan else GlassPanel
+                                ),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(profile, fontSize = 8.sp, color = if (overlockSafetyProfile == profile) DarkBackground else TextPrimary)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isAutotuningInProgress = true
+                        showAutotuneDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
+                ) {
+                    Text("OPTIMIZAR", color = DarkBackground, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAutotuneDialog = false }) {
+                    Text("CERRAR", color = RedAlert, fontSize = 11.sp)
+                }
+            }
+        )
+    }
+
+    if (isAutotuningInProgress) {
+        LaunchedEffect(Unit) {
+            val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            consoleLogs.add(MiningLog(time, "[AI] Iniciando auto-calibración de hilos de CPU..."))
+            delay(1000)
+            consoleLogs.add(MiningLog(time, "[AI] Testeo de ancho de banda a Cerebro Node. Latencia calculada: ${pingSpainToCerebro}ms."))
+            delay(1000)
+            consoleLogs.add(MiningLog(time, "[AI] Calibrando hilos óptimos a ${coreThreads.toInt()} núcleos."))
+            delay(800)
+            consoleLogs.add(MiningLog(time, "[AI] Optimizador completado. Hashrate objetivo fijado en ${calculatedMaxEfficiency} H/s."))
+            isAutotuningInProgress = false
+        }
+        
+        AlertDialog(
+            onDismissRequest = {},
+            containerColor = DarkBackground,
+            title = { Text("Ejecutando Sintonización AI", color = NeonGreen) },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Text("Re-configurando hilos del kernel RandomX...", color = TextPrimary, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    CircularProgressIndicator(color = NeonGreen)
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // BTC WITHDRAWAL DIALOG
     if (showPaymentDialog) {
         AlertDialog(
             onDismissRequest = { showPaymentDialog = false },
             containerColor = DarkBackground,
             titleContentColor = TechCyan,
             textContentColor = TextPrimary,
-            title = { Text("Solicitar Retiro (BTC)") },
+            title = { Text("Solicitar Retiro de Dividendos (BTC)") },
             text = {
                 Column {
-                    Text("Ingresa tu dirección de billetera Bitcoin. El monto mínimo es 0.001 BTC.", fontSize = 14.sp, color = TextSecondary)
+                    Text("Ingresa tu dirección de billetera Bitcoin. El monto acumulado se transferirá mediante el pool central.", fontSize = 12.sp, color = TextSecondary)
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = btcAddress,
                         onValueChange = { btcAddress = it },
-                        label = { Text("Billetera BTC", color = TextSecondary) },
+                        label = { Text("Billetera Bitcoin (BTC)", color = TextSecondary) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = NeonGreen,
                             unfocusedBorderColor = GlassBorder,
@@ -165,7 +428,11 @@ fun DashboardScreen() {
             },
             confirmButton = {
                 Button(
-                    onClick = { showPaymentDialog = false },
+                    onClick = { 
+                        showPaymentDialog = false
+                        val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                        consoleLogs.add(MiningLog(time, "[RETIRAR] Petición de retiro registrada para la dirección: $btcAddress"))
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = NeonGreen)
                 ) {
                     Text("ENVIAR", color = DarkBackground, fontWeight = FontWeight.Bold)
@@ -179,6 +446,7 @@ fun DashboardScreen() {
         )
     }
 
+    // FAQ DIALOG
     if (showFaqDialog) {
         AlertDialog(
             onDismissRequest = { showFaqDialog = false },
@@ -189,7 +457,7 @@ fun DashboardScreen() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = NeonGreen)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Guía Tecno Spark 30C (4+4 RAM)")
+                    Text("Guía Avanzada RandomX")
                 }
             },
             text = {
@@ -200,59 +468,38 @@ fun DashboardScreen() {
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "SOPORTE DE HARDWARE & TERMUX:\n",
+                        text = "ALTA CONECTIVIDAD & RENDIMIENTO:\n",
                         color = NeonGreen,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "El Tecno Spark 30C cuenta con un procesador Helio G36 (Octa-Core) con 4GB de RAM física y 4GB de RAM virtual (Memory Fusion). " +
-                               "¡SÍ es 100% posible ejecutar minería en segundo plano o nodos locales!\n\n" +
-                               "Para maximizar el rendimiento y evitar que el sistema cierre la app por falta de memoria, sigue estos pasos:\n",
+                        text = "Esta aplicación cliente se conecta de forma directa con el teléfono Cerebro Master (incluso si se encuentra en España o en cualquier otra parte del mundo). Para ello se utiliza una conexión de socket continuo de baja latencia con respaldo criptográfico.\n\n" +
+                               "Para maximizar el rendimiento de minería RandomX (XMR) en cualquier modelo Android:\n",
                         color = TextPrimary,
                         fontSize = 12.sp
                     )
                     
                     Text(
-                        text = "1. Configurar memoria virtual (Swap)\n",
+                        text = "1. Sintonizador de Memoria Virtual\n",
                         color = TechCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
                     )
                     Text(
-                        text = "Asegúrate de tener activa la función 'Memory Fusion' en Ajustes > Sistema > Características especiales del Tecno Spark 30C para obtener los 4GB virtuales extras.\n\n",
+                        text = "El motor habilita de forma virtual un archivo Swap para darle al recolector de basura de Android un colchón de 4GB extra, evitando bloqueos súbitos en segundo plano.\n\n",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
 
                     Text(
-                        text = "2. Comandos de Instalación en Termux\n",
+                        text = "2. Gestión Inteligente de Hilos\n",
                         color = TechCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
                     )
                     Text(
-                        text = "Ejecuta lo siguiente en Termux:\n" +
-                               "pkg update && pkg upgrade -y\n" +
-                               "pkg install git cmake make clang -y\n" +
-                               "git clone https://github.com/xmrig/xmrig.git\n" +
-                               "mkdir xmrig/build && cd xmrig/build\n" +
-                               "cmake .. -DWITH_HWLOC=OFF\n" +
-                               "make -j4\n\n",
-                        color = TextSecondary,
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
-
-                    Text(
-                        text = "3. Hilos Óptimos (Threads)\n",
-                        color = TechCyan,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = "Usa un máximo de 3 o 4 hilos (en lugar de 8) en la configuración para mantener el teléfono a buena temperatura y que la RAM física no colapse. " +
-                               "El motor WebSocket local integrado en esta app se adaptará automáticamente a este perfil óptimo.\n",
+                        text = "RandomX depende críticamente del caché L2/L3 de tu CPU. Un exceso de hilos (por ejemplo, usar 8 de 8 en Helio G36) colapsa el caché de datos provocando una caída drástica en H/s y calentando el dispositivo. Mantener la configuración entre 3 y 5 hilos es ideal.\n",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -275,105 +522,182 @@ fun DashboardScreen() {
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Hero Visualizer with 3D Oracle
-        GlassCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
+        
+        // 1. TOP SECURE PAIRING & GMAIL LOGIN
+        GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    if (isGoogleLoggedIn) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(NeonGreen.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = loggedInName.take(1).uppercase(),
+                                color = NeonGreen,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(loggedInName, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(loggedInEmail, color = TextSecondary, fontSize = 11.sp)
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(GlassBorder),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.AccountCircle, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(24.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Sincronización de Cliente", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("No vinculado (Modo Anónimo)", color = RedAlert, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                
+                Button(
+                    onClick = { showLoginDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isGoogleLoggedIn) GlassBorder else NeonGreen),
+                    modifier = Modifier.height(34.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp)
+                ) {
+                    Text(
+                        text = if (isGoogleLoggedIn) "Gmail Activo" else "Vincular Gmail",
+                        color = if (isGoogleLoggedIn) TextPrimary else DarkBackground,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+        }
+
+        // 2. SPAIN ➡️ CEREBRO (LATAM) CONNECTIVITY MAP CARD
+        GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CellTower, contentDescription = null, tint = TechCyan, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("TÚNEL ENCRIPTADO GLOBAL", color = TechCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (isMining) NeonGreen.copy(alpha = 0.15f) else RedAlert.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = if (isMining) "CONECTADO" else "DESCONECTADO",
+                            color = if (isMining) NeonGreen else RedAlert,
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Visual Map Pipeline
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.CompassCalibration, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(24.dp))
+                        Text("ESP (Cliente)", color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(if (isMining) "${pingSpainToCerebro}ms" else "--", color = TechCyan, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                    }
+                    
+                    // Connected arrows
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.Center) {
+                        Box(
+                            modifier = Modifier
+                                .height(2.dp)
+                                .weight(1f)
+                                .background(if (isMining) NeonGreen else GlassBorder)
+                        )
+                        Icon(Icons.Default.Language, contentDescription = null, tint = if (isMining) NeonGreen else TextSecondary, modifier = Modifier.size(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .height(2.dp)
+                                .weight(1f)
+                                .background(if (isMining) NeonGreen else GlassBorder)
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Dns, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(24.dp))
+                        Text("Cerebro Pool", color = NeonGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("Master LATAM", color = TextSecondary, fontSize = 9.sp)
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = GlassBorder)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column {
+                        Text("RED SEGURA", color = TextSecondary, fontSize = 8.sp)
+                        Text(connectionRegion, color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("ESTABILIDAD (PING)", color = TextSecondary, fontSize = 8.sp)
+                        Text(if (isMining) String.format("%.2f%%", signalStability) else "--", color = NeonGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // 3. AI AUTOTUNER TRIGGER CARD
+        GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            Row(
+                modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "NÚCLEO ORÁCULO DE MINERÍA",
+                        text = "MOTOR DE MINERÍA OPTIMIZADO",
                         color = NeonGreen,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = if (isMining) "Sincronizando Bloques via WebSocket..." else "Núcleo de Computación Listo",
+                        text = "Configuración actual: ${coreThreads.toInt()} núcleos | SWAP ${if (virtualSwapEnabled) "ON" else "OFF"}",
                         color = TextPrimary,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = if (isLocalEngine) "Motor: Local (Tecno Spark 30C)" else "Motor: Stratum Pool Externo",
-                        color = TechCyan,
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
                 }
-                com.example.ui.components.OracleAnimatedCore(
-                    size = 80.dp,
-                    isActive = isMining
-                )
-            }
-        }
-
-        // Engine Selector Panel
-        GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "SELECCIÓN DE MOTOR DE NODO",
-                    color = TechCyan,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    letterSpacing = 1.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                IconButton(
+                    onClick = { showAutotuneDialog = true },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(NeonGreen.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
                 ) {
-                    Button(
-                        onClick = { isLocalEngine = true },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isLocalEngine) NeonGreen else GlassPanel
-                        ),
-                        border = if (!isLocalEngine) androidx.compose.foundation.BorderStroke(1.dp, GlassBorder) else null
-                    ) {
-                        Text(
-                            "Termux Local (4+4GB)",
-                            color = if (isLocalEngine) DarkBackground else TextPrimary,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Button(
-                        onClick = { isLocalEngine = false },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (!isLocalEngine) NeonGreen else GlassPanel
-                        ),
-                        border = if (isLocalEngine) androidx.compose.foundation.BorderStroke(1.dp, GlassBorder) else null
-                    ) {
-                        Text(
-                            "Stratum Pool",
-                            color = if (!isLocalEngine) DarkBackground else TextPrimary,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
-                    onClick = { showFaqDialog = true },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Guía Tecno Spark 30C & Termux", color = NeonGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.AutoAwesome, contentDescription = "AI Autotune", tint = NeonGreen, modifier = Modifier.size(20.dp))
                 }
             }
         }
 
+        // Header Panel Info
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -381,149 +705,107 @@ fun DashboardScreen() {
         ) {
             Column {
                 Text(
-                    text = "PANEL CEREBRO NODO OMNI-MAX",
+                    text = "CLIENTE RADICAL XMR",
                     color = TechCyan,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Estado: ${if (isMining) "ACTIVO" else "EN ESPERA"}",
-                    color = if (isMining) NeonGreen else TextSecondary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "Hashrate Objetivo AI: $calculatedMaxEfficiency H/s",
+                    color = TextSecondary,
+                    fontSize = 12.sp
                 )
             }
-            
-            Icon(Icons.Default.CloudSync, contentDescription = null, tint = if (isMining) NeonGreen else TextSecondary, modifier = Modifier.size(32.dp))
+            TextButton(onClick = { showFaqDialog = true }) {
+                Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null, tint = NeonGreen, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Guía XMR", color = NeonGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
+        // Hardware Real-Time Monitor
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             StatusCard(
                 modifier = Modifier.weight(1f),
-                title = "CPU TEMP",
+                title = "TEMPERATURA",
                 value = "${cpuTemp}°C",
                 icon = Icons.Default.Speed,
-                color = if (cpuTemp > 80) RedAlert else NeonGreen
+                color = if (cpuTemp > 70) RedAlert else NeonGreen
             )
             StatusCard(
                 modifier = Modifier.weight(1f),
-                title = "RAM",
+                title = "RAM / SWAP",
                 value = String.format("%.1f GB", ramUsage),
                 icon = Icons.Default.Memory,
                 color = TechCyan
             )
             StatusCard(
                 modifier = Modifier.weight(1f),
-                title = "LATENCIA",
-                value = if (isMining) "${Random.nextInt(40, 120)}ms" else "--",
-                icon = Icons.Default.NetworkPing,
+                title = "PAQUETES",
+                value = if (isMining) "#$packetSyncCount" else "--",
+                icon = Icons.Default.CloudUpload,
                 color = if (isMining) NeonGreen else TextSecondary
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Hashrate Timeline Graph
         GlassCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(180.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("HASHRATE GLOBAL (H/s)", color = TextSecondary, fontSize = 12.sp)
-                    Text("$currentHashrate", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Text("VELOCIDAD RANDOM-X EN TIEMPO REAL (H/s)", color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("$currentHashrate H/s", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 HashrateChart(data = hashrateHistory, modifier = Modifier.fillMaxSize())
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Settings Section
-        GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Settings, contentDescription = null, tint = TechCyan, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("CONFIGURACIÓN DEL POOL", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = poolUrl,
-                        onValueChange = { poolUrl = it },
-                        label = { Text("Pool URL", fontSize = 12.sp) },
-                        enabled = !isMining,
-                        modifier = Modifier.weight(0.7f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonGreen, unfocusedBorderColor = GlassBorder,
-                            disabledTextColor = TextSecondary, disabledBorderColor = GlassBorder.copy(alpha = 0.2f),
-                            focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary
-                        ),
-                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
-                    )
-                    OutlinedTextField(
-                        value = threads,
-                        onValueChange = { threads = it },
-                        label = { Text("Hilos", fontSize = 12.sp) },
-                        enabled = !isMining,
-                        modifier = Modifier.weight(0.3f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = NeonGreen, unfocusedBorderColor = GlassBorder,
-                            disabledTextColor = TextSecondary, disabledBorderColor = GlassBorder.copy(alpha = 0.2f),
-                            focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary
-                        ),
-                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
-                    )
-                }
-            }
-        }
+        Spacer(modifier = Modifier.height(14.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Console Section
-        GlassCard(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+        // Custom Mining Terminal Console
+        GlassCard(modifier = Modifier.fillMaxWidth().height(140.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("TERMINAL DE MINERÍA", color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text("TERMINAL DE SECTOR DE MINERÍA", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
                 LazyColumn(state = logScrollState, modifier = Modifier.fillMaxSize()) {
                     items(consoleLogs) { log ->
                         Row(modifier = Modifier.fillMaxWidth()) {
-                            Text("[${log.timestamp}]", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                            Text("[${log.timestamp}]", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(log.message, color = if (log.isError) RedAlert else TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                            Text(log.message, color = if (log.isError) RedAlert else TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                         }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        val glowAlpha by animateFloatAsState(
-            targetValue = if (isMining) 1f else 0f,
-            animationSpec = tween(1000), label = ""
-        )
-
+        // Main Mining Switch Button
         Button(
             onClick = { isMining = !isMining },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(60.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isMining) GlassPanel else NeonGreen
             ),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(10.dp),
             border = if (isMining) androidx.compose.foundation.BorderStroke(1.dp, RedAlert) else null
         ) {
             Icon(
@@ -531,40 +813,41 @@ fun DashboardScreen() {
                 contentDescription = null,
                 tint = if (isMining) RedAlert else DarkBackground
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = if (isMining) "DETENER NODO DE MINERÍA" else "INICIAR NODO DE MINERÍA",
+                text = if (isMining) "APAGAR NODO DE COMPUTACIÓN" else "ENCENDER NODO EN SEGUNDO PLANO",
                 color = if (isMining) RedAlert else DarkBackground,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 14.sp
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // Accumulated Dividends Card
         GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CurrencyBitcoin, contentDescription = null, tint = TechCyan)
+                    Icon(Icons.Default.Paid, contentDescription = null, tint = TechCyan)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("SALDO ACUMULADO", color = TechCyan, fontWeight = FontWeight.Bold)
+                    Text("REGISTRO DE SALDO VINCULADO", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(String.format("%.7f BTC", balance), color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text("~ $${String.format("%.2f", balance * 65000)} USD", color = TextSecondary, fontSize = 12.sp)
+                Text(String.format("%.8f XMR", balance * 12.5f), color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("~ $${String.format("%.2f", balance * 12.5f * 174.5f)} USD (Monto verificado por Cerebro)", color = TextSecondary, fontSize = 11.sp)
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = { showPaymentDialog = true },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = GlassPanel),
                     border = androidx.compose.foundation.BorderStroke(1.dp, TechCyan)
                 ) {
-                    Text("SOLICITAR PAGO A BILLETERA", color = TechCyan, fontWeight = FontWeight.Bold)
+                    Text("SOLICITAR RETIRO AL POOL MAESTRO", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
         }
-        Spacer(modifier = Modifier.height(80.dp)) // Extra padding for bottom bar
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
