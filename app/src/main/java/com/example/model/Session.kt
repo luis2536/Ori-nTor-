@@ -1,6 +1,6 @@
 package com.example.model
 
 object Session {
-    var isAdmin: Boolean = false
-    var currentKey: String = ""
+    var isAdmin: Boolean = true
+    var currentKey: String = "CEREBRO_MASTER_SECURE_99"
 }

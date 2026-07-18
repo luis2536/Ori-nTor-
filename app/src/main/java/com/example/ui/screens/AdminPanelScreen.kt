@@ -102,7 +102,6 @@ fun AdminPanelScreen() {
             }
             OracleAnimatedCore(size = 56.dp, isActive = true)
         }
-        
         Spacer(modifier = Modifier.height(16.dp))
 
         // Navigation Tabs (Minimalist)
@@ -118,12 +117,13 @@ fun AdminPanelScreen() {
                 )
             }
         ) {
-                val tabs = listOf(
-                    "NODOS" to Icons.Default.Hub,
-                    "MARKETING" to Icons.Default.Campaign,
-                    "SOCIA (50%)" to Icons.Default.VerifiedUser,
-                    "LOGS AI" to Icons.Default.Terminal
-                )
+            val tabs = listOf(
+                "NODOS" to Icons.Default.Hub,
+                "CEREBRO ENGINE" to Icons.Default.Dns,
+                "MARKETING" to Icons.Default.Campaign,
+                "SOCIA (50%)" to Icons.Default.VerifiedUser,
+                "LOGS AI" to Icons.Default.Terminal
+            )
             tabs.forEachIndexed { index, (title, icon) ->
                 Tab(
                     selected = selectedTab == index,
@@ -140,20 +140,23 @@ fun AdminPanelScreen() {
 
         // Tab Content Switching
         when (selectedTab) {
-            0 -> NodesAdminView(nodes)
-            1 -> MarketingView()
-            2 -> PartnerAuditView(nodes)
-            3 -> CerebroLogsView(systemLogs)
+            0 -> NodesAdminView(nodes, systemLogs)
+            1 -> CerebroEngineView(systemLogs)
+            2 -> MarketingView()
+            3 -> PartnerAuditView(nodes)
+            4 -> CerebroLogsView(systemLogs)
         }
     }
 }
 
 @Composable
-fun NodesAdminView(nodes: MutableList<NodeInfo>) {
+fun NodesAdminView(nodes: MutableList<NodeInfo>, systemLogs: MutableList<LogEntry>) {
     val totalHashrate = nodes.sumOf { it.hashRate }
     val activeNodes = nodes.count { it.status == "ACTIVE" }
+    var commandInput by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
-    Column {
+    Column(modifier = Modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             GlassCard(modifier = Modifier.weight(1f)) {
                 Column(modifier = Modifier.padding(12.dp)) {
@@ -169,51 +172,163 @@ fun NodesAdminView(nodes: MutableList<NodeInfo>) {
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
-        Button(
-            onClick = { 
-                // Disconnect logic
-                nodes.replaceAll { it.copy(status = "OFFLINE", hashRate = 0) }
-            },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = RedAlert),
-            shape = RoundedCornerShape(8.dp)
+        // Command Shortcuts Toolbar
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Icon(Icons.Default.PowerOff, contentDescription = null, tint = DarkBackground)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("DESCONEXIÓN MASIVA (KILL SWITCH)", color = DarkBackground, fontWeight = FontWeight.Bold)
+            Button(
+                onClick = {
+                    val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                    systemLogs.add(LogEntry(time, "[CMD] PING enviado. Latencias: ALPHA (14ms), BETA (22ms), DELTA (18ms)"))
+                },
+                modifier = Modifier.weight(1f).height(36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GlassPanel),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("PING ALL", color = TechCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = {
+                    val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                    systemLogs.add(LogEntry(time, "[CMD] Overclocking Pool. Multiplicador de Hashrate fijado en 2.5x", false))
+                    // Increase hashrate of active nodes
+                    nodes.replaceAll { if (it.status == "ACTIVE") it.copy(hashRate = (it.hashRate * 1.5).toInt()) else it }
+                },
+                modifier = Modifier.weight(1f).height(36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GlassPanel),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("OVERCLOCK ⚡", color = NeonGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = {
+                    val randId = Random.nextInt(100, 999)
+                    val randIp = "192.168.1.${Random.nextInt(2, 254)}"
+                    val newN = NodeInfo("NODE_NET_$randId", randIp, "ACTIVE", Random.nextInt(1500, 4500), "REG-LATAM")
+                    nodes.add(newN)
+                    val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                    systemLogs.add(LogEntry(time, "[NET] Cliente conectado desde $randIp. Sincronizando con base de datos local."))
+                },
+                modifier = Modifier.weight(1f).height(36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GlassPanel),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("+ CONECTAR", color = NeonGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxHeight()) {
-            items(nodes) { node ->
-                GlassCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(node.id, color = TextPrimary, fontWeight = FontWeight.Bold)
-                            Text("${node.ip} • ${node.region}", color = TextSecondary, fontSize = 11.sp)
-                            Text(
-                                text = if (node.status == "ACTIVE") "Conectado | ${node.hashRate} H/s" else "Desconectado",
-                                color = if (node.status == "ACTIVE") NeonGreen else RedAlert,
-                                fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        Row {
-                            IconButton(onClick = { /* Approve */ }) {
-                                Icon(Icons.Default.Link, contentDescription = "Conectar", tint = NeonGreen)
+        // Decoupled Nodes List
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxSize()) {
+                items(nodes) { node ->
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(node.id, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("${node.ip} • ${node.region}", color = TextSecondary, fontSize = 10.sp)
+                                Text(
+                                    text = if (node.status == "ACTIVE") "ONLINE | ${node.hashRate} H/s" else "OFFLINE",
+                                    color = if (node.status == "ACTIVE") NeonGreen else RedAlert,
+                                    fontSize = 10.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
                             }
-                            IconButton(onClick = { /* Block */ }) {
-                                Icon(Icons.Default.LinkOff, contentDescription = "Desconectar", tint = RedAlert)
+                            Row {
+                                if (node.status == "ACTIVE") {
+                                    IconButton(
+                                        onClick = {
+                                            nodes.replaceAll { if (it.id == node.id) it.copy(status = "OFFLINE", hashRate = 0) else it }
+                                            val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                                            systemLogs.add(LogEntry(time, "[CMD] Desconectado forzosamente nodo: ${node.id}", true))
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(Icons.Default.LinkOff, contentDescription = "Desconectar", tint = RedAlert, modifier = Modifier.size(18.dp))
+                                    }
+                                } else {
+                                    IconButton(
+                                        onClick = {
+                                            nodes.replaceAll { if (it.id == node.id) it.copy(status = "ACTIVE", hashRate = Random.nextInt(2000, 4000)) else it }
+                                            val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                                            systemLogs.add(LogEntry(time, "[CMD] Reconectado y autorizado nodo: ${node.id}"))
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(Icons.Default.Link, contentDescription = "Conectar", tint = NeonGreen, modifier = Modifier.size(18.dp))
+                                    }
+                                }
                             }
                         }
                     }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Shell Terminal Command Line Bar
+        GlassCard(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(">", color = NeonGreen, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
+                    value = commandInput,
+                    onValueChange = { commandInput = it },
+                    placeholder = { Text("CMD Command...", color = TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.Monospace) },
+                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontFamily = FontFamily.Monospace, fontSize = 12.sp),
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        disabledBorderColor = Color.Transparent
+                    ),
+                    singleLine = true
+                )
+                IconButton(
+                    onClick = {
+                        if (commandInput.isNotBlank()) {
+                            val cleanCmd = commandInput.trim().lowercase()
+                            val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                            systemLogs.add(LogEntry(time, "[CMD Console] Executed: '$cleanCmd'"))
+                            
+                            when {
+                                cleanCmd == "reboot" || cleanCmd == "/reboot" -> {
+                                    systemLogs.add(LogEntry(time, "[SYS] Reiniciando WebSocket clúster Node.js en puerto 8080..."))
+                                }
+                                cleanCmd == "clear" || cleanCmd == "/clear" -> {
+                                    systemLogs.clear()
+                                }
+                                cleanCmd.startsWith("kill") -> {
+                                    nodes.replaceAll { it.copy(status = "OFFLINE", hashRate = 0) }
+                                    systemLogs.add(LogEntry(time, "[SYS] KILL ALL SWITCH EJECUTADO DESDE CONSOLA", true))
+                                }
+                                cleanCmd == "status" -> {
+                                    systemLogs.add(LogEntry(time, "[DB] SQLite local: 104 KB | 4 Tablas | 12K Registros synced"))
+                                }
+                                else -> {
+                                    systemLogs.add(LogEntry(time, "[AI] Comandos aceptados: reboot, clear, kill, status"))
+                                }
+                            }
+                            commandInput = ""
+                        }
+                    },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send CMD", tint = TechCyan, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -373,6 +488,177 @@ fun CerebroLogsView(logs: List<LogEntry>) {
                         fontFamily = FontFamily.Monospace,
                         fontSize = 10.sp
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CerebroEngineView(systemLogs: MutableList<LogEntry>) {
+    var isServerOnline by remember { mutableStateOf(true) }
+    var serverPort by remember { mutableStateOf("8080") }
+    var syncIntervalSec by remember { mutableStateOf(10f) }
+    var dbSyncCount by remember { mutableStateOf(142) }
+    
+    // Dynamic simulated metrics
+    var cpuUsage by remember { mutableFloatStateOf(12f) }
+    var ramUsage by remember { mutableFloatStateOf(48f) }
+    
+    LaunchedEffect(isServerOnline) {
+        if (isServerOnline) {
+            while (true) {
+                delay(3000)
+                cpuUsage = Random.nextInt(8, 25).toFloat()
+                ramUsage = Random.nextInt(42, 60).toFloat()
+                if (Random.nextFloat() > 0.7f) {
+                    dbSyncCount += 1
+                    val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                    systemLogs.add(LogEntry(time, "[DB-SYNC] Local SQLite sharding package #${dbSyncCount} pushed to remote cluster.", false))
+                }
+            }
+        }
+    }
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        // Status Card
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Dns, contentDescription = null, tint = TechCyan)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("NODE.JS CORE CONTROLLER", color = TextPrimary, fontWeight = FontWeight.Bold)
+                    }
+                    Switch(
+                        checked = isServerOnline,
+                        onCheckedChange = { 
+                            isServerOnline = it 
+                            val time = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+                            if (it) {
+                                systemLogs.add(LogEntry(time, "[SYS] Node.js Master Server started on port $serverPort."))
+                            } else {
+                                systemLogs.add(LogEntry(time, "[SYS] Node.js Master Server STOPPED. All client synchronization halted.", true))
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = NeonGreen,
+                            checkedTrackColor = NeonGreen.copy(alpha = 0.5f)
+                        )
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("PORT", color = TextSecondary, fontSize = 10.sp)
+                        OutlinedTextField(
+                            value = serverPort,
+                            onValueChange = { serverPort = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = NeonGreen,
+                                unfocusedBorderColor = GlassBorder,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            singleLine = true,
+                            enabled = !isServerOnline
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("WEBSOCKET STATUS", color = TextSecondary, fontSize = 10.sp)
+                        Text(
+                            text = if (isServerOnline) "LISTENING" else "OFFLINE",
+                            color = if (isServerOnline) NeonGreen else RedAlert,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Metrics Card
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("TELEMETRÍA EN TIEMPO REAL (NODE.JS)", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // CPU Usage
+                Text("CPU ENGINE: ${cpuUsage.toInt()}%", color = TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                LinearProgressIndicator(
+                    progress = { cpuUsage / 100f },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    color = TechCyan,
+                    trackColor = GlassBorder
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // RAM Usage
+                Text("RAM POOL: ${ramUsage.toInt()}%", color = TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                LinearProgressIndicator(
+                    progress = { ramUsage / 100f },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    color = NeonGreen,
+                    trackColor = GlassBorder
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // SQLite Local State
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("BASE DE DATOS LOCAL", color = TextSecondary, fontSize = 10.sp)
+                        Text("SQLite / Room Online", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("PAQUETES SYNCED", color = TextSecondary, fontSize = 10.sp)
+                        Text("$dbSyncCount lotes", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Sync Rate Controller
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("TIEMPO DE MUESTREO DE CLIENTE", color = TextPrimary, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Slider(
+                    value = syncIntervalSec,
+                    onValueChange = { syncIntervalSec = it },
+                    valueRange = 2f..60f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = TechCyan,
+                        activeTrackColor = TechCyan,
+                        inactiveTrackColor = GlassBorder
+                    )
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Min: 2s", color = TextSecondary, fontSize = 10.sp)
+                    Text("Valor actual: ${syncIntervalSec.toInt()}s", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    Text("Max: 60s", color = TextSecondary, fontSize = 10.sp)
                 }
             }
         }

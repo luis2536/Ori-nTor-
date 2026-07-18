@@ -48,64 +48,6 @@ fun OrionNavGraph() {
                     containerColor = DarkBackground,
                     contentColor = NeonGreen
                 ) {
-                    if (!Session.isAdmin) {
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
-                            label = { Text("Node") },
-                            selected = currentRoute == "dashboard",
-                            onClick = {
-                                navController.navigate("dashboard") {
-                                    popUpTo("dashboard") { inclusive = false }
-                                    launchSingleTop = true
-                                }
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = DarkBackground,
-                                selectedTextColor = NeonGreen,
-                                indicatorColor = NeonGreen,
-                                unselectedIconColor = TextSecondary,
-                                unselectedTextColor = TextSecondary
-                            )
-                        )
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Default.People, contentDescription = "Social") },
-                            label = { Text("Social") },
-                            selected = currentRoute == "social",
-                            onClick = {
-                                navController.navigate("social") {
-                                    popUpTo("dashboard")
-                                    launchSingleTop = true
-                                }
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = DarkBackground,
-                                selectedTextColor = NeonGreen,
-                                indicatorColor = NeonGreen,
-                                unselectedIconColor = TextSecondary,
-                                unselectedTextColor = TextSecondary
-                            )
-                        )
-                    }
-                    
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Terminal, contentDescription = "AI Terminal") },
-                        label = { Text("Chat AI") },
-                        selected = currentRoute == "terminal",
-                        onClick = {
-                            navController.navigate("terminal") {
-                                popUpTo(if (Session.isAdmin) "admin" else "dashboard")
-                                launchSingleTop = true
-                            }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = DarkBackground,
-                            selectedTextColor = NeonGreen,
-                            indicatorColor = NeonGreen,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary
-                        )
-                    )
-
                     if (Session.isAdmin) {
                         NavigationBarItem(
                             icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin") },
@@ -126,6 +68,63 @@ fun OrionNavGraph() {
                             )
                         )
                     }
+
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
+                        label = { Text(if (Session.isAdmin) "Client Node" else "Node") },
+                        selected = currentRoute == "dashboard",
+                        onClick = {
+                            navController.navigate("dashboard") {
+                                popUpTo(if (Session.isAdmin) "admin" else "dashboard") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkBackground,
+                            selectedTextColor = NeonGreen,
+                            indicatorColor = NeonGreen,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        )
+                    )
+
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Terminal, contentDescription = "AI Terminal") },
+                        label = { Text("Chat AI") },
+                        selected = currentRoute == "terminal",
+                        onClick = {
+                            navController.navigate("terminal") {
+                                popUpTo(if (Session.isAdmin) "admin" else "dashboard")
+                                launchSingleTop = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkBackground,
+                            selectedTextColor = NeonGreen,
+                            indicatorColor = NeonGreen,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        )
+                    )
+
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.People, contentDescription = "Social") },
+                        label = { Text("Social") },
+                        selected = currentRoute == "social",
+                        onClick = {
+                            navController.navigate("social") {
+                                popUpTo(if (Session.isAdmin) "admin" else "dashboard")
+                                launchSingleTop = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = DarkBackground,
+                            selectedTextColor = NeonGreen,
+                            indicatorColor = NeonGreen,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        )
+                    )
                 }
             }
         }
@@ -138,7 +137,7 @@ fun OrionNavGraph() {
         ) {
             NavHost(
                 navController = navController,
-                startDestination = "login"
+                startDestination = if (Session.isAdmin) "admin" else "login"
             ) {
                 composable("login") { LoginScreen(navController) }
                 composable("terms") { TermsScreen(navController) }
