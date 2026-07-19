@@ -27,6 +27,7 @@ import com.example.model.Session
 import com.example.ui.screens.AdminPanelScreen
 import com.example.ui.screens.AITerminalScreen
 import com.example.ui.screens.DashboardScreen
+import com.example.ui.screens.MinerClientScreen
 import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.SocialScreen
 import com.example.ui.screens.TermsScreen
@@ -142,6 +143,7 @@ fun OrionNavGraph() {
                 composable("login") { LoginScreen(navController) }
                 composable("terms") { TermsScreen(navController) }
                 composable("dashboard") { DashboardScreen() }
+                composable("miner") { MinerClientScreen(onNavigateBack = { navController.popBackStack() }) }
                 composable("social") { SocialScreen() }
                 composable("terminal") { AITerminalScreen() }
                 composable("admin") { AdminPanelScreen() }
