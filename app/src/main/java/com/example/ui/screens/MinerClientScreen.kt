@@ -82,6 +82,64 @@ fun GlassGauge(
     }
 }
 
+@Composable
+fun RealTimeChart(
+    data: List<Float>,
+    modifier: Modifier = Modifier,
+    lineColor: Color = NeonGreen
+) {
+    Canvas(modifier = modifier) {
+        if (data.isEmpty()) return@Canvas
+        
+        val maxVal = (data.maxOrNull() ?: 5000f).coerceAtLeast(1000f)
+        val maxItems = 20
+        val stepX = size.width / (maxItems - 1).coerceAtLeast(1)
+        
+        val path = androidx.compose.ui.graphics.Path()
+        val fillPath = androidx.compose.ui.graphics.Path()
+        
+        val normalizedData = if (data.size < maxItems) {
+            List(maxItems - data.size) { 0f } + data
+        } else {
+            data.takeLast(maxItems)
+        }
+        
+        normalizedData.forEachIndexed { index, value ->
+            val x = index * stepX
+            val y = size.height - (value / maxVal * size.height)
+            
+            if (index == 0) {
+                path.moveTo(x, y)
+                fillPath.moveTo(x, size.height)
+                fillPath.lineTo(x, y)
+            } else {
+                path.lineTo(x, y)
+                fillPath.lineTo(x, y)
+            }
+            
+            if (index == normalizedData.lastIndex) {
+                fillPath.lineTo(x, size.height)
+                fillPath.close()
+            }
+        }
+        
+        drawPath(
+            path = fillPath,
+            brush = Brush.verticalGradient(
+                colors = listOf(lineColor.copy(alpha = 0.3f), Color.Transparent),
+                startY = 0f,
+                endY = size.height
+            )
+        )
+        
+        drawPath(
+            path = path,
+            color = lineColor,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MinerClientScreen(onNavigateBack: () -> Unit) {
@@ -96,13 +154,18 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
     var ramUsage by remember { mutableFloatStateOf(40f) }
     var gpuUsage by remember { mutableFloatStateOf(5f) }
     var sharesAccepted by remember { mutableIntStateOf(0) }
+    val hashrateHistory = remember { mutableStateListOf<Float>() }
     
     LaunchedEffect(isMining) {
         if (isMining) {
             isConnected = true
             while (isMining) {
                 delay(1500)
-                hashrate = Random.nextInt(2500, 4800)
+                val newHashrate = Random.nextInt(2500, 4800)
+                hashrate = newHashrate
+                hashrateHistory.add(newHashrate.toFloat())
+                if (hashrateHistory.size > 20) hashrateHistory.removeAt(0)
+                
                 cpuTemp = Random.nextInt(55, 80)
                 cpuUsage = Random.nextInt(85, 100).toFloat()
                 ramUsage = Random.nextInt(60, 85).toFloat()
@@ -112,6 +175,9 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
         } else {
             isConnected = false
             hashrate = 0
+            hashrateHistory.add(0f)
+            if (hashrateHistory.size > 20) hashrateHistory.removeAt(0)
+            
             cpuTemp = Random.nextInt(35, 45)
             cpuUsage = Random.nextInt(5, 15).toFloat()
             ramUsage = Random.nextInt(35, 45).toFloat()
@@ -257,6 +323,18 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                             Text("$sharesAccepted", color = TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         }
                     }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text("RENDIMIENTO EN TIEMPO REAL (HASHRATE)", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    RealTimeChart(
+                        data = hashrateHistory,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .padding(vertical = 8.dp),
+                        lineColor = NeonGreen
+                    )
                 }
             }
             
