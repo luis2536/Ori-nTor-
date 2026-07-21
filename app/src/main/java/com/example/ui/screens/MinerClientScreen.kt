@@ -147,8 +147,11 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
     var isMining by remember { mutableStateOf(false) }
     var masterIp by remember { mutableStateOf("api.orionthor.io:8443") }
     var minerId by remember { mutableStateOf("SLAVE_NODE_${Random.nextInt(1000, 9999)}") }
+    var personalWallet by remember { mutableStateOf("") }
     var isConnected by remember { mutableStateOf(false) }
     var hashrate by remember { mutableIntStateOf(0) }
+    var miningPower by remember { mutableFloatStateOf(80f) }
+    var estimatedEarnings by remember { mutableFloatStateOf(0.000000f) }
     var cpuTemp by remember { mutableIntStateOf(35) }
     var cpuUsage by remember { mutableFloatStateOf(10f) }
     var ramUsage by remember { mutableFloatStateOf(40f) }
@@ -161,16 +164,20 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
             isConnected = true
             while (isMining) {
                 delay(1500)
-                val newHashrate = Random.nextInt(2500, 4800)
+                val baseHash = (2500f * (miningPower / 100f)).toInt()
+                val newHashrate = Random.nextInt(baseHash, baseHash + 1500)
                 hashrate = newHashrate
                 hashrateHistory.add(newHashrate.toFloat())
                 if (hashrateHistory.size > 20) hashrateHistory.removeAt(0)
                 
-                cpuTemp = Random.nextInt(55, 80)
-                cpuUsage = Random.nextInt(85, 100).toFloat()
+                cpuTemp = 35 + (45f * (miningPower / 100f)).toInt() + Random.nextInt(-5, 5)
+                cpuUsage = miningPower + Random.nextInt(-5, 5).toFloat()
                 ramUsage = Random.nextInt(60, 85).toFloat()
                 gpuUsage = Random.nextInt(10, 35).toFloat()
-                if (Random.nextFloat() > 0.4f) sharesAccepted += 1
+                if (Random.nextFloat() > 0.4f) {
+                    sharesAccepted += 1
+                    estimatedEarnings += 0.000015f * (miningPower / 50f)
+                }
             }
         } else {
             isConnected = false
@@ -244,6 +251,34 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                         ),
                         textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
                         enabled = !isMining
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = personalWallet,
+                        onValueChange = { personalWallet = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Billetera Personal (Wallet)", color = TextSecondary, fontSize = 11.sp) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonGreen,
+                            unfocusedBorderColor = GlassBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
+                        enabled = !isMining
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("POTENCIA DE MINADO (${miningPower.toInt()}%)", color = TechCyan, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    Slider(
+                        value = miningPower,
+                        onValueChange = { miningPower = it },
+                        valueRange = 10f..100f,
+                        enabled = !isMining,
+                        colors = SliderDefaults.colors(
+                            thumbColor = NeonGreen,
+                            activeTrackColor = NeonGreen,
+                            inactiveTrackColor = GlassBorder
+                        )
                     )
                 }
             }
@@ -321,6 +356,29 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                             Text("SHARES OK", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text("$sharesAccepted", color = TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HorizontalDivider(color = GlassBorder.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = Color(0xFFFFB300))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("GANANCIA ESTIMADA", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = String.format("%.6f XMR", estimatedEarnings),
+                                color = Color(0xFFFFB300),
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
+                            )
                         }
                     }
                     
