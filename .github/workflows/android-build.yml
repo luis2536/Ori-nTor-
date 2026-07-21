@@ -1,4 +1,8 @@
 name: Android CI/CD Pipeline
+
+# Build workflow updated for Syntropy Delta Labs
+# Ensures correct zero-trust CI compilation without local keystore dependencies
+
 on:
   push:
     branches: [ "main" ]

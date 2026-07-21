@@ -32,9 +32,10 @@ android {
       keyPassword = "android"
     }
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      val keystoreFile = file(keystorePath)
-      if (keystoreFile.exists()) {
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
+      val keystoreFile = if (keystorePath.isNotBlank()) file(keystorePath) else null
+      
+      if (keystoreFile != null && keystoreFile.exists() && keystoreFile.isFile) {
         storeFile = keystoreFile
         storePassword = System.getenv("STORE_PASSWORD")
         keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
