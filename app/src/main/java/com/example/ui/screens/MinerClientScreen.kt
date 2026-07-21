@@ -148,47 +148,33 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
     var masterIp by remember { mutableStateOf("api.orionthor.io:8443") }
     var minerId by remember { mutableStateOf("SLAVE_NODE_${Random.nextInt(1000, 9999)}") }
     var personalWallet by remember { mutableStateOf("") }
-    var isConnected by remember { mutableStateOf(false) }
-    var hashrate by remember { mutableIntStateOf(0) }
-    var miningPower by remember { mutableFloatStateOf(80f) }
-    var estimatedEarnings by remember { mutableFloatStateOf(0.000000f) }
-    var cpuTemp by remember { mutableIntStateOf(35) }
-    var cpuUsage by remember { mutableFloatStateOf(10f) }
-    var ramUsage by remember { mutableFloatStateOf(40f) }
-    var gpuUsage by remember { mutableFloatStateOf(5f) }
-    var sharesAccepted by remember { mutableIntStateOf(0) }
-    val hashrateHistory = remember { mutableStateListOf<Float>() }
     
+    val miningStats by com.example.miner.MiningEngine.stats.collectAsState()
+    var miningPower by remember { mutableFloatStateOf(80f) }
+    
+    val hashrateHistory = remember { mutableStateListOf<Float>() }
+
+    // Synchronize power level with engine
+    LaunchedEffect(miningPower) {
+        com.example.miner.MiningEngine.updatePower(miningPower)
+    }
+
     LaunchedEffect(isMining) {
         if (isMining) {
-            isConnected = true
-            while (isMining) {
-                delay(1500)
-                val baseHash = (2500f * (miningPower / 100f)).toInt()
-                val newHashrate = Random.nextInt(baseHash, baseHash + 1500)
-                hashrate = newHashrate
-                hashrateHistory.add(newHashrate.toFloat())
-                if (hashrateHistory.size > 20) hashrateHistory.removeAt(0)
-                
-                cpuTemp = 35 + (45f * (miningPower / 100f)).toInt() + Random.nextInt(-5, 5)
-                cpuUsage = miningPower + Random.nextInt(-5, 5).toFloat()
-                ramUsage = Random.nextInt(60, 85).toFloat()
-                gpuUsage = Random.nextInt(10, 35).toFloat()
-                if (Random.nextFloat() > 0.4f) {
-                    sharesAccepted += 1
-                    estimatedEarnings += 0.000015f * (miningPower / 50f)
-                }
-            }
+            com.example.miner.MiningEngine.startEngine(miningPower)
         } else {
-            isConnected = false
-            hashrate = 0
+            com.example.miner.MiningEngine.stopEngine()
+        }
+    }
+    
+    // Track hashrate history for the chart separately to avoid tying the chart too closely to the core loop
+    LaunchedEffect(miningStats.hashrate) {
+        if (isMining && miningStats.hashrate > 0) {
+            hashrateHistory.add(miningStats.hashrate.toFloat())
+            if (hashrateHistory.size > 20) hashrateHistory.removeAt(0)
+        } else if (!isMining) {
             hashrateHistory.add(0f)
             if (hashrateHistory.size > 20) hashrateHistory.removeAt(0)
-            
-            cpuTemp = Random.nextInt(35, 45)
-            cpuUsage = Random.nextInt(5, 15).toFloat()
-            ramUsage = Random.nextInt(35, 45).toFloat()
-            gpuUsage = Random.nextInt(0, 5).toFloat()
         }
     }
 
@@ -301,12 +287,12 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(androidx.compose.foundation.shape.CircleShape)
-                                    .background(if (isConnected) NeonGreen else RedAlert)
+                                    .background(if (miningStats.isConnected) NeonGreen else RedAlert)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isConnected) "ONLINE" else "OFFLINE",
-                                color = if (isConnected) NeonGreen else RedAlert,
+                                text = if (miningStats.isConnected) "ONLINE" else "OFFLINE",
+                                color = if (miningStats.isConnected) NeonGreen else RedAlert,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace
@@ -318,21 +304,21 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         GlassGauge(
-                            progress = cpuUsage / 100f,
+                            progress = miningStats.cpuUsage / 100f,
                             label = "CPU UTIL",
-                            valueLabel = "${cpuUsage.toInt()}%",
+                            valueLabel = "${miningStats.cpuUsage.toInt()}%",
                             primaryColor = NeonGreen
                         )
                         GlassGauge(
-                            progress = ramUsage / 100f,
+                            progress = miningStats.ramUsage / 100f,
                             label = "RAM UTIL",
-                            valueLabel = "${ramUsage.toInt()}%",
+                            valueLabel = "${miningStats.ramUsage.toInt()}%",
                             primaryColor = TechCyan
                         )
                         GlassGauge(
-                            progress = gpuUsage / 100f,
+                            progress = miningStats.gpuUsage / 100f,
                             label = "GPU UTIL",
-                            valueLabel = "${gpuUsage.toInt()}%",
+                            valueLabel = "${miningStats.gpuUsage.toInt()}%",
                             primaryColor = Color(0xFFFF00FF) // Neon Magenta
                         )
                     }
@@ -345,17 +331,17 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("HASHRATE", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("$hashrate H/s", color = if (isMining) NeonGreen else TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            Text("$miningStats.hashrate H/s", color = if (isMining) NeonGreen else TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("TEMP CPU", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("${cpuTemp}°C", color = if (cpuTemp > 75) RedAlert else TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            Text("${miningStats.cpuTemp}°C", color = if (miningStats.cpuTemp > 75) RedAlert else TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("SHARES OK", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("$sharesAccepted", color = TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            Text("$miningStats.sharesAccepted", color = TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         }
                     }
                     
@@ -373,7 +359,7 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                         Column {
                             Text("GANANCIA ESTIMADA", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             Text(
-                                text = String.format("%.6f XMR", estimatedEarnings),
+                                text = String.format("%.6f XMR", miningStats.estimatedEarnings),
                                 color = Color(0xFFFFB300),
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,

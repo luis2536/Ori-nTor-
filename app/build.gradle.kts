@@ -41,7 +41,8 @@ android {
   buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
       if (keystorePath.isNotBlank() && file(keystorePath).exists()) {
@@ -60,6 +61,11 @@ android {
   }
   kotlinOptions {
     jvmTarget = "17"
+    freeCompilerArgs += listOf(
+        "-opt-in=kotlin.RequiresOptIn",
+        "-Xjvm-default=all",
+        "-Xbackend-threads=0"
+    )
   }
   buildFeatures {
     compose = true
