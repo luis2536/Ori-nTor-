@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +34,54 @@ import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
+@Composable
+fun GlassGauge(
+    progress: Float,
+    label: String,
+    valueLabel: String,
+    primaryColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress.coerceIn(0f, 1f),
+        animationSpec = tween(1500)
+    )
+
+    Box(contentAlignment = Alignment.Center, modifier = modifier.size(100.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 8.dp.toPx()
+            val innerRadius = (size.minDimension - strokeWidth) / 2
+            val centerOffset = Offset(size.width / 2, size.height / 2)
+
+            // Background Track
+            drawArc(
+                color = GlassBorder,
+                startAngle = 135f,
+                sweepAngle = 270f,
+                useCenter = false,
+                topLeft = Offset(centerOffset.x - innerRadius, centerOffset.y - innerRadius),
+                size = Size(innerRadius * 2, innerRadius * 2),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+
+            // Foreground Progress
+            drawArc(
+                brush = Brush.sweepGradient(listOf(primaryColor.copy(alpha=0.5f), primaryColor, primaryColor)),
+                startAngle = 135f,
+                sweepAngle = 270f * animatedProgress,
+                useCenter = false,
+                topLeft = Offset(centerOffset.x - innerRadius, centerOffset.y - innerRadius),
+                size = Size(innerRadius * 2, innerRadius * 2),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(valueLabel, color = primaryColor, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Text(label, color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MinerClientScreen(onNavigateBack: () -> Unit) {
@@ -37,6 +92,9 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
     var isConnected by remember { mutableStateOf(false) }
     var hashrate by remember { mutableIntStateOf(0) }
     var cpuTemp by remember { mutableIntStateOf(35) }
+    var cpuUsage by remember { mutableFloatStateOf(10f) }
+    var ramUsage by remember { mutableFloatStateOf(40f) }
+    var gpuUsage by remember { mutableFloatStateOf(5f) }
     var sharesAccepted by remember { mutableIntStateOf(0) }
     
     LaunchedEffect(isMining) {
@@ -46,12 +104,18 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                 delay(1500)
                 hashrate = Random.nextInt(2500, 4800)
                 cpuTemp = Random.nextInt(55, 80)
+                cpuUsage = Random.nextInt(85, 100).toFloat()
+                ramUsage = Random.nextInt(60, 85).toFloat()
+                gpuUsage = Random.nextInt(10, 35).toFloat()
                 if (Random.nextFloat() > 0.4f) sharesAccepted += 1
             }
         } else {
             isConnected = false
             hashrate = 0
             cpuTemp = Random.nextInt(35, 45)
+            cpuUsage = Random.nextInt(5, 15).toFloat()
+            ramUsage = Random.nextInt(35, 45).toFloat()
+            gpuUsage = Random.nextInt(0, 5).toFloat()
         }
     }
 
@@ -152,6 +216,31 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        GlassGauge(
+                            progress = cpuUsage / 100f,
+                            label = "CPU UTIL",
+                            valueLabel = "${cpuUsage.toInt()}%",
+                            primaryColor = NeonGreen
+                        )
+                        GlassGauge(
+                            progress = ramUsage / 100f,
+                            label = "RAM UTIL",
+                            valueLabel = "${ramUsage.toInt()}%",
+                            primaryColor = TechCyan
+                        )
+                        GlassGauge(
+                            progress = gpuUsage / 100f,
+                            label = "GPU UTIL",
+                            valueLabel = "${gpuUsage.toInt()}%",
+                            primaryColor = Color(0xFFFF00FF) // Neon Magenta
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HorizontalDivider(color = GlassBorder.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("HASHRATE", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
@@ -168,17 +257,6 @@ fun MinerClientScreen(onNavigateBack: () -> Unit) {
                             Text("$sharesAccepted", color = TechCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    val loadProgress by animateFloatAsState(targetValue = if (isMining) (cpuTemp - 35) / 50f else 0f, animationSpec = tween(1000))
-                    Text("CARGA DE SISTEMA", color = TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    LinearProgressIndicator(
-                        progress = { loadProgress.coerceIn(0f, 1f) },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).height(8.dp).clip(RoundedCornerShape(4.dp)),
-                        color = if (loadProgress > 0.8f) RedAlert else NeonGreen,
-                        trackColor = GlassBorder
-                    )
                 }
             }
             
